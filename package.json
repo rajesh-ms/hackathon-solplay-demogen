@@ -1,0 +1,58 @@
+{
+  "name": "solplay-demogen",
+  "version": "1.0.0",
+  "description": "Solution Play Demo Generator - Automatically extract Hero AI use cases from Financial Services solution plays and generate demoable solutions",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:packages",
+    "install:packages": "npm install --workspaces",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai-engine\"",
+    "dev:frontend": "npm run dev --workspace=packages/frontend",
+    "dev:backend": "npm run dev --workspace=packages/backend", 
+    "dev:ai-engine": "npm run dev --workspace=packages/ai-engine",
+    "build": "npm run build --workspaces",
+    "build:frontend": "npm run build --workspace=packages/frontend",
+    "build:backend": "npm run build --workspace=packages/backend",
+    "build:ai-engine": "npm run build --workspace=packages/ai-engine",
+    "test": "npm run test --workspaces",
+    "test:unit": "npm run test:unit --workspaces",
+    "test:integration": "npm run test:integration --workspaces",
+    "test:e2e": "npm run test:e2e --workspace=packages/frontend",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "type-check": "npm run type-check --workspaces",
+    "clean": "npm run clean --workspaces && rimraf node_modules",
+    "deploy:dev": "npm run deploy:dev --workspace=infrastructure",
+    "deploy:prod": "npm run deploy:prod --workspace=infrastructure",
+    "aria:process": "node scripts/aria-cli.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "concurrently": "^8.2.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rajesh-ms/hackathon-solplay-demogen.git"
+  },
+  "keywords": [
+    "ai",
+    "automation", 
+    "financial-services",
+    "demo-generation",
+    "pdf-processing",
+    "aria-v4",
+    "azure",
+    "typescript"
+  ],
+  "license": "MIT",
+  "author": "ARIA v4 Development Team"
+}

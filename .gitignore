@@ -1,0 +1,87 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Azure specific
+.azure/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Uploaded files (development)
+uploads/
+documents/
+
+# Demo artifacts
+demos/
+generated/
+
+# PDF processing cache
+pdf-cache/
+
+# AI model cache
+ai-cache/
+
+# Test artifacts
+test-results/
+e2e-results/
+
+# Docker
+.dockerignore
+Dockerfile.dev
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Local database
+*.db
+*.sqlite

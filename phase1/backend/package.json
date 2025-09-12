@@ -1,0 +1,31 @@
+{
+  "name": "solplay-phase1-backend",
+  "version": "1.0.0",
+  "description": "Phase 1 - RFP Response Demo Backend",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/app.ts",
+    "start": "node dist/app.js",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "multer": "^1.4.5",
+    "pdf-parse": "^1.1.1",
+    "openai": "^4.0.0",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/multer": "^1.4.7",
+    "@types/uuid": "^9.0.0",
+    "@types/cors": "^2.8.13",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.9.1"
+  }
+}
