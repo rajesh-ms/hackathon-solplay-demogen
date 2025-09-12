@@ -97,6 +97,12 @@ export class DemoBuilder {
     };
   }
   
+    // Backward compatibility alias (previous code referenced buildRFPDemo)
+    buildRFPDemo(extractedData: any, _originalName?: string): string {
+        const config = this.generateRFPDemo(extractedData);
+        return this.generateDemoHTML(config);
+    }
+  
   private getDefaultScenario(): any {
     return {
       scenario: "Investment Management Platform RFP Response",

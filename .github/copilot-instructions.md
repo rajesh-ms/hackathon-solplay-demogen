@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is **hackathon-solplay-demogen** - a project containing the ARIA v4 (Autonomous Reasoning Intelligence for Applications) system prompt, which is an advanced agentic AI coder framework designed for autonomous software development.
+This is **hackathon-solplay-demogen** - a project containing the ARIA v4 (Autonomous Reasoning Intelligence for Applications) system prompt, which is an advanced agentic AI coder framework designed for autonomous software development. This agent takes Sales's solution play use cases defined in pdf document and build the demoable solution based on the use case asked to pick.
 
 ## Key Architecture
 

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { PDFParser } from './pdf-parser';
 import { AIProcessor } from './ai-processor';
 import { DemoBuilder } from './demo-builder';
+import { MarketResearchAgent } from './market-research-agent';
+import fsExtra from 'fs/promises';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -19,7 +21,7 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 // File upload configuration
 const storage = multer.diskStorage({
   destination: path.join(__dirname, '../../data/uploads'),
-  filename: (req, file, cb) => {
+  filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const uniqueName = `${uuidv4()}-${file.originalname}`;
     cb(null, uniqueName);
   }
@@ -27,7 +29,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  fileFilter: (req, file, cb) => {
+  fileFilter: (req: Request, file: Express.Multer.File, cb: (error: Error | null, acceptFile?: boolean) => void) => {
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
@@ -41,6 +43,7 @@ const upload = multer({
 const pdfParser = new PDFParser();
 const aiProcessor = new AIProcessor();
 const demoBuilder = new DemoBuilder();
+const marketResearchAgent = new MarketResearchAgent(path.join(__dirname, '../../data'));
 
 // Processing status tracking
 const processingStatus = new Map<string, {
@@ -54,7 +57,7 @@ const processingStatus = new Map<string, {
 // Routes
 
 // Upload PDF file
-app.post('/api/upload', upload.single('pdf'), async (req, res) => {
+app.post('/api/upload', upload.single('pdf'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No PDF file uploaded' });
@@ -86,7 +89,7 @@ app.post('/api/upload', upload.single('pdf'), async (req, res) => {
 });
 
 // Check processing status
-app.get('/api/status/:id', (req, res) => {
+app.get('/api/status/:id', (req: Request, res: Response) => {
   const { id } = req.params;
   const status = processingStatus.get(id);
   
@@ -98,7 +101,7 @@ app.get('/api/status/:id', (req, res) => {
 });
 
 // Get generated demo
-app.get('/api/demos/:id', async (req, res) => {
+app.get('/api/demos/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const demoPath = path.join(__dirname, '../../data/demos', `${id}.html`);
@@ -118,8 +121,38 @@ app.get('/api/demos/:id', async (req, res) => {
   }
 });
 
+// Enhanced Market Research & Analytics endpoint
+app.post('/api/market-research/analyze', async (req: Request, res: Response) => {
+  try {
+    const { topic, localDataIds, rawLocalData, maxWebResults } = req.body || {};
+    if (!topic || typeof topic !== 'string') {
+      return res.status(400).json({ error: 'Missing required field: topic' });
+    }
+    const report = await marketResearchAgent.run({ topic, localDataIds, rawLocalData, maxWebResults });
+    res.json({ success: true, report });
+  } catch (error) {
+    console.error('Market research error:', error);
+    res.status(500).json({ error: 'Failed to generate market research report' });
+  }
+});
+
+// Retrieve stored research report
+app.get('/api/market-research/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const filePath = path.join(__dirname, '../../data/market-research', `${id}.json`);
+    const exists = await fs.access(filePath).then(()=>true).catch(()=>false);
+    if (!exists) return res.status(404).json({ error: 'Report not found' });
+    const content = await fsExtra.readFile(filePath, 'utf8');
+    res.json(JSON.parse(content));
+  } catch (error) {
+    console.error('Retrieve report error:', error);
+    res.status(500).json({ error: 'Failed to retrieve report' });
+  }
+});
+
 // Serve frontend
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
 

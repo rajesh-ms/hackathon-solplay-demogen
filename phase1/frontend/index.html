@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Market Research Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background:#0f172a; color:#f1f5f9; }
+    header { padding:1.5rem 2rem; background:#1e293b; }
+    h1 { margin:0; font-size:1.4rem; }
+    main { max-width:960px; margin:0 auto; padding:2rem; }
+    form { display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem; }
+    input[type=text] { flex:1 1 320px; padding:.75rem; border-radius:6px; border:1px solid #334155; background:#1e293b; color:#f1f5f9; }
+    button { background:#3b82f6; border:none; padding:.75rem 1.25rem; border-radius:6px; color:white; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    section { background:#1e293b; padding:1rem 1.25rem; border-radius:8px; margin-bottom:1.25rem; }
+    .grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+    h2 { font-size:1rem; letter-spacing:.5px; text-transform:uppercase; color:#93c5fd; margin:0 0 .5rem; }
+    ul { margin:0; padding-left:1.1rem; }
+    li { margin:.4rem 0; line-height:1.3; }
+    code { background:#0f172a; padding:2px 4px; border-radius:4px; font-size:.75rem; }
+    footer { text-align:center; font-size:.75rem; opacity:.6; padding:2rem 0 3rem; }
+    .badge { display:inline-block; background:#334155; padding:2px 8px; border-radius:12px; font-size:.65rem; margin-left:.5rem; }
+    .result-meta { font-size:.7rem; display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+    a { color:#93c5fd; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .web-results article { background:#0f172a; padding:.75rem .9rem; border-radius:6px; border:1px solid #334155; }
+    .spinner { width:18px; height:18px; border:3px solid #334155; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg);} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Enhanced Market Research & Analytics Demo <span class="badge">Phase 1</span></h1>
+  </header>
+  <main>
+    <form id="researchForm">
+      <input id="topicInput" type="text" placeholder="Enter research topic (e.g., AI-driven market surveillance)" required />
+      <button type="submit" id="runBtn">Run Research</button>
+    </form>
+    <div id="status"></div>
+    <div id="reportContainer" hidden>
+      <section>
+        <h2>Summary</h2>
+        <div id="summary"></div>
+      </section>
+      <section>
+        <h2>Comparative Insights</h2>
+        <ul id="comparative"></ul>
+      </section>
+      <div class="grid">
+        <section>
+          <h2>Opportunities</h2>
+          <ul id="opportunities"></ul>
+        </section>
+        <section>
+          <h2>Risks</h2>
+          <ul id="risks"></ul>
+        </section>
+        <section>
+          <h2>Recommended Actions</h2>
+          <ul id="recommended"></ul>
+        </section>
+      </div>
+      <section class="web-results">
+        <h2>Web Findings</h2>
+        <div id="webFindings" class="grid"></div>
+      </section>
+      <section>
+        <h2>Metadata</h2>
+        <pre id="metadata" style="white-space:pre-wrap; font-size:.7rem;"></pre>
+      </section>
+    </div>
+  </main>
+  <footer>
+    Generated dynamically by MarketResearchAgent – synthetic fallback will be used if keys not set.
+  </footer>
+  <script>
+    const form = document.getElementById('researchForm');
+    const topicInput = document.getElementById('topicInput');
+    const runBtn = document.getElementById('runBtn');
+    const statusEl = document.getElementById('status');
+    const container = document.getElementById('reportContainer');
+    const comparativeEl = document.getElementById('comparative');
+    const opportunitiesEl = document.getElementById('opportunities');
+    const risksEl = document.getElementById('risks');
+    const recommendedEl = document.getElementById('recommended');
+    const webFindingsEl = document.getElementById('webFindings');
+    const summaryEl = document.getElementById('summary');
+    const metadataEl = document.getElementById('metadata');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const topic = topicInput.value.trim();
+      if(!topic) return;
+      container.hidden = true;
+      statusEl.innerHTML = '<div style="display:flex;align-items:center;gap:.5rem;"> <div class="spinner"></div> Running research...</div>';
+      runBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/market-research/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, maxWebResults: 4 })
+        });
+        const json = await res.json();
+        if(!json.success){
+          statusEl.textContent = 'Error: ' + (json.error || 'Unknown');
+          runBtn.disabled = false; return;
+        }
+        const r = json.report;
+        statusEl.textContent = 'Completed';
+        comparativeEl.innerHTML = r.comparativeInsights.map(i=>`<li>${i}</li>`).join('');
+        opportunitiesEl.innerHTML = r.opportunities.map(i=>`<li>${i}</li>`).join('');
+        risksEl.innerHTML = r.risks.map(i=>`<li>${i}</li>`).join('');
+        recommendedEl.innerHTML = r.recommendedActions.map(i=>`<li>${i}</li>`).join('');
+        webFindingsEl.innerHTML = r.webFindings.map(w=>`<article><strong><a href="${w.url}" target="_blank" rel="noopener">${w.title}</a></strong><p style="font-size:.75rem;line-height:1.2;margin:.4rem 0;">${w.snippet}</p><div class="result-meta"><span>Source: ${w.source}</span>${w.publishedAt?`<span>${new Date(w.publishedAt).toLocaleDateString()}</span>`:''}</div></article>`).join('');
+        summaryEl.textContent = r.localDataSummary;
+        metadataEl.textContent = JSON.stringify(r.meta, null, 2);
+        container.hidden = false;
+      } catch(err){
+        statusEl.textContent = 'Error performing research: ' + err.message;
+      } finally {
+        runBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -7,7 +7,7 @@ Intelligent platform that automatically reads Financial Services solution play P
 
 **Phase 1 Goal**: Build a working demo for ONE Hero AI use case with synthetic data and local file storage.
 
-**Selected Use Case**: **Content Generation - RFP Response Automation**
+**Selected Use Case (Initial)**: **Content Generation - RFP Response Automation**
 - Input: Financial Services solution play PDF
 - Output: AI-generated RFP response demonstration
 - Storage: Local file system (no cloud requirements)
@@ -55,6 +55,71 @@ npm run start:backend
 - ✅ **Demo Generation**: Automatic creation of RFP response demonstrations
 - ✅ **Synthetic Data**: Sample solution plays and RFP scenarios
 - ✅ **Local Storage**: File system based storage (no cloud dependencies)
+ - ✅ **(NEW) Enhanced Market Research & Analytics**: AI agent combines local extracted data with live (or synthetic fallback) web search to produce structured research insights
+
+### Enhanced Market Research & Analytics (New Use Case)
+This feature demonstrates an AI research analyst agent that:
+1. Loads locally stored extracted solution play or RFP data (previous uploads)
+2. Performs an external web search (Bing Web Search API or SerpAPI if keys provided, otherwise synthetic fallback)
+3. Synthesizes comparative insights, opportunities, risks, and recommended actions
+4. Persists a structured research report JSON for retrieval and further demo usage
+
+#### API Endpoints
+POST `/api/market-research/analyze`
+Request body:
+```json
+{
+    "topic": "enhanced market research in capital markets",
+    "localDataIds": ["<processingId1>", "<processingId2>"],
+    "maxWebResults": 5
+}
+```
+Alternative: supply rawLocalData instead of localDataIds:
+```json
+{
+    "topic": "AI driven market surveillance",
+    "rawLocalData": [
+        { "title": "Internal Capability Deck", "content": "Our platform ingests multi-venue trading feeds..." }
+    ]
+}
+```
+Response:
+```json
+{
+    "success": true,
+    "report": {
+        "id": "uuid",
+        "topic": "...",
+        "comparativeInsights": ["..."],
+        "opportunities": ["..."],
+        "risks": ["..."],
+        "recommendedActions": ["..."],
+        "webFindings": [ { "title": "...", "url": "...", "snippet": "..." } ],
+        "meta": { "provider": "bing|serpapi|dummy", "syntheticFallback": false }
+    }
+}
+```
+
+GET `/api/market-research/:id`
+Returns the stored research report JSON.
+
+#### Environment Variables
+Add to `.env` (optional, improves realism):
+```
+BING_SEARCH_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
+SERPAPI_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
+OPENAI_API_KEY=sk-.... (already used by existing AI processor)
+```
+If no search keys are present, a deterministic synthetic ("dummy") provider returns plausible placeholder findings; if no OpenAI key, a heuristic synthetic insight generator is used.
+
+#### File Output
+Reports stored under `phase1/data/market-research/<id>.json` with structure defined by `ResearchReport` interface.
+
+#### Future Enhancements (Not yet implemented)
+- Entity-level citation mapping and confidence scoring
+- Time-series aggregation of repeated research runs
+- Vector store enrichment for improved local contextualization
+- Frontend UI to browse & compare reports
 
 ### Phase 1 File Structure
 ```
@@ -84,6 +149,7 @@ phase1/
 2. **Process**: AI extracts RFP response automation capabilities
 3. **Generate**: System creates synthetic RFP and AI-generated response
 4. **Demo**: View side-by-side comparison of manual vs AI approach
+5. **(Optional) Research**: Invoke market research agent to generate strategic insights incorporating latest public information
 
 ## 🔮 Future Phases (Post Phase 1)
 
