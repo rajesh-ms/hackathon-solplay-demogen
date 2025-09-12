@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolPlay Demo - Solana Gaming Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .demo-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .demo-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .demo-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+        
+        .demo-card p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .wallet-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .wallet-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .game-area {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .score-display {
+            font-size: 2rem;
+            margin: 20px 0;
+            color: #FFD700;
+        }
+        
+        .status-message {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+        
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+            color: #F44336;
+        }
+        
+        .info {
+            background: rgba(33, 150, 243, 0.3);
+            color: #2196F3;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            background: #000;
+            margin: 20px 0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .features-list {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .features-list li {
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .features-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4ECDC4;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 SolPlay Demo</h1>
+            <p>Experience the Future of Solana Gaming</p>
+        </div>
+        
+        <div class="wallet-section">
+            <button id="connectWallet" class="btn">Connect Wallet</button>
+            <div id="walletInfo" class="wallet-info hidden">
+                <p><strong>Connected:</strong> <span id="walletAddress"></span></p>
+                <p><strong>Balance:</strong> <span id="walletBalance">0</span> SOL</p>
+            </div>
+        </div>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>🎯 Simple Click Game</h3>
+                <p>Earn points by clicking! Connect your wallet to save your high score on-chain.</p>
+                <ul class="features-list">
+                    <li>Interactive gameplay</li>
+                    <li>Score tracking</li>
+                    <li>Wallet integration</li>
+                    <li>On-chain leaderboard</li>
+                </ul>
+                <button id="startGame" class="btn">Start Game</button>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🏆 NFT Rewards</h3>
+                <p>Demonstrate NFT minting and reward distribution for achieving game milestones.</p>
+                <ul class="features-list">
+                    <li>Achievement-based NFTs</li>
+                    <li>Solana NFT standards</li>
+                    <li>Metadata management</li>
+                    <li>Collection creation</li>
+                </ul>
+                <button id="mintNFT" class="btn" disabled>Mint Achievement NFT</button>
+            </div>
+            
+            <div class="demo-card">
+                <h3>💰 Token Economy</h3>
+                <p>Showcase custom token creation and in-game economy mechanics.</p>
+                <ul class="features-list">
+                    <li>Custom SPL tokens</li>
+                    <li>Token distribution</li>
+                    <li>In-game purchases</li>
+                    <li>Reward mechanisms</li>
+                </ul>
+                <button id="createToken" class="btn" disabled>Create Game Token</button>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <h3>🎮 Demo Game: Click Challenge</h3>
+            <p>Click the target as fast as you can! Reach 100 points to unlock NFT rewards.</p>
+            
+            <div class="score-display">Score: <span id="score">0</span></div>
+            
+            <canvas id="gameCanvas" width="400" height="300"></canvas>
+            
+            <div>
+                <button id="resetGame" class="btn">Reset Game</button>
+                <button id="saveScore" class="btn" disabled>Save Score On-Chain</button>
+            </div>
+            
+            <div id="statusMessage" class="status-message hidden"></div>
+        </div>
+    </div>
+    
+    <script src="js/mock-solana.js"></script>
+    <script src="js/wallet.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/solana-integration.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

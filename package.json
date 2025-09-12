@@ -1,0 +1,19 @@
+{
+  "name": "solplay-demo",
+  "version": "1.0.0",
+  "description": "A demo showcasing Solana gaming concepts for hackathon",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000"
+  },
+  "keywords": ["solana", "gaming", "nft", "web3", "demo"],
+  "author": "Hackathon Team",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.87.6",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-wallets": "^0.19.25",
+    "@solana/wallet-adapter-phantom": "^0.9.24"
+  }
+}
