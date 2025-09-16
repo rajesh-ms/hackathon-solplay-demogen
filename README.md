@@ -17,27 +17,53 @@ Intelligent platform that automatically reads Financial Services solution play P
 
 #### Prerequisites
 - Node.js 18+
-- OpenAI API key
+- AI API key (OpenAI or v0.dev)
 - Git
 
-#### Installation & Setup
+#### Option 1: v0.dev-Powered Demo (Branch: feature/v0solution)
+```bash
+git clone https://github.com/rajesh-ms/hackathon-solplay-demogen.git
+cd hackathon-solplay-demogen
+git checkout feature/v0solution
+
+# Navigate to Phase 1 implementation
+cd phase1/backend
+npm install
+
+# Set up environment variables
+cp ../../.env.example .env
+# Edit .env and set:
+# AI_PROVIDER=v0
+# V0_API_KEY=your_v0_api_key_here (optional - uses mock mode without it)
+
+# Start the backend
+npm run dev
+```
+
+#### Option 2: OpenAI-Powered Demo (Branch: main)
 ```bash
 git clone https://github.com/rajesh-ms/hackathon-solplay-demogen.git
 cd hackathon-solplay-demogen
 
 # Navigate to Phase 1 implementation
-cd phase1
-
-# Install dependencies
+cd phase1/backend
 npm install
 
 # Set up environment variables
-cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+cp ../../.env.example .env
+# Edit .env and set:
+# AI_PROVIDER=openai
+# OPENAI_API_KEY=your_openai_api_key_here
 
-# Start the Phase 1 demo
+# Start the backend
 npm run dev
 ```
+
+#### Using the Demo
+1. Open `phase1/frontend/index.html` in your browser
+2. Upload the sample PDF from `phase1/synthetic-data/`
+3. Watch AI generate a professional RFP response demo
+4. View the interactive demo interface
 
 #### Running Phase 1 Demo
 ```bash

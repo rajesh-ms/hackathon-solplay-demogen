@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Phase 1 - RFP Response Demo Backend",
   "main": "dist/app.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/app.ts",
@@ -16,6 +17,7 @@
     "cors": "^2.8.5",
     "express": "^4.18.0",
     "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
     "openai": "^4.0.0",
     "pdf-parse": "^1.1.1",
     "uuid": "^9.0.0"

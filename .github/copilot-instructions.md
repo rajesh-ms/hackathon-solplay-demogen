@@ -110,6 +110,77 @@ Quality requirements scale with T-shirt size while maintaining core standards li
 - **Structure**: Minimal - focuses on the prompt engineering framework
 - **Purpose**: Hackathon project for demonstrating advanced AI agent architecture
 
+## v0.dev SDK Integration for Demo Generation
+
+### Overview
+This branch (`feature/v0solution`) uses the v0.dev SDK for generating interactive web-based demos from solution play use cases. The v0.dev platform specializes in creating production-ready React components and interfaces through AI-powered code generation.
+
+### Integration Objectives
+- **Replace OpenAI direct calls** with v0.dev SDK for UI generation
+- **Maintain compatibility** with existing Phase 1 architecture
+- **Generate interactive demos** that showcase Hero AI use cases
+- **Provide fallback mechanisms** for development/testing environments
+
+### Technical Implementation
+
+#### 1. Environment Configuration
+Required environment variables in `.env`:
+```bash
+V0_API_KEY=your_v0_api_key_here
+V0_BASE_URL=https://v0.dev/api  # Optional, uses default if not set
+AI_PROVIDER=v0  # Options: 'openai', 'v0', 'mock'
+```
+
+#### 2. AI Provider Abstraction
+The system uses a provider abstraction pattern:
+```typescript
+interface AIProvider {
+  generateDemo(useCase: string, context: any): Promise<DemoResult>;
+  generateComponent(prompt: string): Promise<ComponentResult>;
+}
+```
+
+#### 3. v0.dev Client Integration
+Location: `phase1/backend/src/v0-client.ts`
+- Handles v0.dev API authentication and requests
+- Transforms solution play content into v0-compatible prompts
+- Manages rate limiting and error handling
+- Provides TypeScript interfaces for v0.dev responses
+
+#### 4. Demo Generation Workflow
+1. **PDF Processing**: Extract use case content (unchanged)
+2. **Prompt Engineering**: Transform content for v0.dev format
+3. **Component Generation**: Use v0.dev to create React components
+4. **Demo Assembly**: Combine components into complete demo
+5. **Local Serving**: Serve generated demo via Express
+
+### Usage Patterns
+
+#### When to Use v0.dev Integration
+- Building user-facing demo interfaces
+- Creating interactive components for Hero AI use cases
+- Generating professional-looking prototypes quickly
+- Showcasing RFP automation with visual interfaces
+
+#### Developer Guidelines
+- **Environment Setup**: Always check `AI_PROVIDER` env var first
+- **Error Handling**: Implement graceful fallbacks to mock data
+- **Rate Limiting**: Respect v0.dev API limits (implement queuing if needed)
+- **Testing**: Use mock provider for unit tests
+- **Documentation**: Update component documentation when using v0-generated code
+
+### Quality Assurance
+- **Code Review**: All v0-generated components must be reviewed
+- **Security**: Sanitize any dynamic content in generated components
+- **Performance**: Monitor bundle size of generated components
+- **Accessibility**: Ensure v0-generated UI meets WCAG standards
+
+### Troubleshooting
+- **API Key Issues**: Verify V0_API_KEY is set and valid
+- **Rate Limits**: Implement exponential backoff for API calls
+- **Generation Failures**: Fall back to static templates or mock data
+- **Component Errors**: Validate generated TypeScript before compilation
+
 ## Key Principles for AI Agents
 
 1. **Always start as Scrum Master** - Size the request first
@@ -117,5 +188,6 @@ Quality requirements scale with T-shirt size while maintaining core standards li
 3. **Scale quality to complexity** - Match rigor to T-shirt size
 4. **Document appropriately** - PM creates size-matched documentation
 5. **Maintain role clarity** - Always identify current role and next steps
+6. **Use appropriate AI provider** - Choose v0.dev for UI generation, respect environment configuration
 
 This project represents a sophisticated approach to AI agent orchestration with adaptive complexity management - treat it as a reference implementation for multi-role AI systems.

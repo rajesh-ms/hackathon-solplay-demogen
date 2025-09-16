@@ -1,8 +1,11 @@
+import { aiProvider, DemoResult } from './ai-provider.js';
+
 export interface DemoConfig {
   title: string;
   description: string;
   scenario: any;
   steps: DemoStep[];
+  generatedDemo?: DemoResult;
 }
 
 export interface DemoStep {
@@ -16,17 +19,29 @@ export interface DemoStep {
 
 export class DemoBuilder {
   
-  generateRFPDemo(extractedData: any): DemoConfig {
+  async generateRFPDemo(extractedData: any): Promise<DemoConfig> {
     console.log('🎬 Building interactive demo from extracted data...');
     
     const capabilities = extractedData.rfpCapabilities || [];
     const scenarios = extractedData.sampleScenarios || [];
     const metrics = extractedData.keyMetrics || {};
     
+    // Generate interactive demo using the configured AI provider
+    const useCase = "RFP Response Automation for Financial Services";
+    const context = {
+      capabilities,
+      scenarios,
+      metrics,
+      extractedData
+    };
+    
+    const generatedDemo = await aiProvider.generateDemo(useCase, context);
+    
     return {
       title: "RFP Response Automation - Financial Services Demo",
       description: "Interactive demonstration of AI-powered RFP response generation for Financial Services organizations",
       scenario: scenarios[0] || this.getDefaultScenario(),
+      generatedDemo,
       steps: [
         {
           stepNumber: 1,
@@ -98,8 +113,8 @@ export class DemoBuilder {
   }
   
     // Backward compatibility alias (previous code referenced buildRFPDemo)
-    buildRFPDemo(extractedData: any, _originalName?: string): string {
-        const config = this.generateRFPDemo(extractedData);
+    async buildRFPDemo(extractedData: any, _originalName?: string): Promise<string> {
+        const config = await this.generateRFPDemo(extractedData);
         return this.generateDemoHTML(config);
     }
   
@@ -112,6 +127,12 @@ export class DemoBuilder {
   }
   
   generateDemoHTML(demoConfig: DemoConfig): string {
+    // If we have a generated demo from AI provider, use it
+    if (demoConfig.generatedDemo && demoConfig.generatedDemo.html) {
+      return demoConfig.generatedDemo.html;
+    }
+    
+    // Fallback to the original template-based demo
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
