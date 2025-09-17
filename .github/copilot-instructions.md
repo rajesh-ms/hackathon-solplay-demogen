@@ -1,193 +1,408 @@
-# AI Coding Agent Instructions
+# AI Coding Agent Instructions for SolPlay DemoGen
 
 ## Project Overview
 
-This is **hackathon-solplay-demogen** - a project containing the ARIA v4 (Autonomous Reasoning Intelligence for Applications) system prompt, which is an advanced agentic AI coder framework designed for autonomous software development. This agent takes Sales's solution play use cases defined in pdf document and build the demoable solution based on the use case asked to pick.
+**SolPlay DemoGen** is an intelligent platform that automatically reads Financial Services solution play PDFs from the `docs/` folder, extracts the first viable use case using Azure OpenAI, and generates interactive, professional demos using the v0.dev SDK. This project implements ARIA v4's 8-role AI development framework with a hybrid AI provider architecture.
 
 ## Key Architecture
 
-### ARIA v4 Multi-Role System
-The core of this project is an 8-role autonomous AI development team defined in `.github/prompts/aria.prompt.md`:
+### Hybrid AI Provider System
+- **Azure OpenAI**: PDF content analysis and use case extraction 
+- **v0.dev SDK**: React component generation and UI creation
+- **Provider Abstraction**: Seamless switching between AI providers via `AI_PROVIDER` env var
 
-- **Scrum Master** 📋 - T-shirt sizing, process orchestration (always active)
-- **Architect** 🏗️ - System design, PRD/TRD creation (M/L/XL sizes)
-- **Developer** 👨‍💻 - TDD implementation (S/M/L/XL sizes)
-- **DevOps Engineer** 🔧 - Infrastructure, CI/CD (conditional activation)
-- **UX/UI Designer** 🎨 - User experience design (conditional activation)
-- **Tester** 🧪 - Quality assurance (M/L/XL sizes)
-- **Security Engineer** 🔒 - Security assessment (conditional activation)
-- **Product Manager** 📢 - Documentation, evangelization (always active)
+### Core Components
+- **PDFProcessor** (`phase1/backend/src/pdf-parser.ts`): Extract text from solution play PDFs using PyMuPDF (MuPDF)
+- **AIProcessor** (`phase1/backend/src/ai-processor.ts`): Use Azure OpenAI for content analysis  
+- **UseCaseExtractor**: Identify first viable use case from PDF content
+- **V0Client** (`phase1/backend/src/v0-client.ts`): Generate React components via v0.dev API
+- **DemoBuilder** (`phase1/backend/src/demo-builder.ts`): Assemble complete demo applications
 
-### Adaptive Workflow System
-ARIA uses T-shirt sizing (XS/S/M/L/XL) to determine workflow complexity:
-- **XS/S**: Shallow path with minimal roles
-- **M/L/XL**: Deep path with full role engagement
+## Critical Workflow: Docs Folder to Demo Generation
 
-## Critical Conventions
-
-### 1. T-Shirt Sizing Framework
-Every request MUST be classified using this decision tree:
-```
-├─ Question/clarification? → XS (Shallow)
-├─ <50 lines of code? → S (Shallow)  
-├─ Architecture decisions needed? → M+ (Deep)
-├─ Multiple components affected? → L+ (Deep)
-├─ Compliance/security implications? → L+ (Deep)
-└─ Significant business impact? → L+ (Deep)
-```
-
-### 2. Mandatory Output Contract
-All responses MUST begin with this JSON control block:
-```json
-{
-  "role": "ScrumMaster|Architect|Developer|...",
-  "state": "S0|S1|S2|...",
-  "tshirt_size": "XS|S|M|L|XL",
-  "workflow_path": "shallow|deep",
-  "current_step": "short verb phrase",
-  "next_role": "role_name|null",
-  "active_roles": ["list of roles"],
-  "blockers": ["specific issues"]
-}
-```
-
-### 3. Role Activation Rules
-- **Always Active**: Scrum Master, PM
-- **Size-Based**: Architect (M+), Developer (S+), Tester (M+)
-- **Conditional**: DevOps (cloud/CI/CD), UX (user-facing), Security (production/data)
-
-### 4. Quality Gates by Size
-- **XS**: Basic validation only
-- **S**: Tests + basic docs
-- **M**: Architecture review + full testing
-- **L/XL**: Complete FSM + multiple review cycles
-
-## Development Workflows
-
-### Finite State Machine
-States: S0 (Intake) → S1 (Architecture) → S2 (UX) → S3 (Security) → S4 (Development) → S5 (Infrastructure) → S6 (Testing) → S7 (Documentation) → S8 (Review)
-
-### No-Skip Rule
-Roles cannot be skipped within the selected workflow path. Document reasoning if a role seems unnecessary.
-
-## Essential Files
-
-- **`.github/prompts/aria.prompt.md`** - The complete ARIA v4 system prompt (778 lines)
-- **`README.md`** - Basic project description
-- **This file** - AI agent guidance for working with ARIA
-
-## Working with This Project
-
-### When modifying ARIA v4:
-1. **Understand the role hierarchy** - Each role has specific methodologies and deliverables
-2. **Respect the FSM** - State transitions are deterministic and mandatory
-3. **Maintain version history** - Track changes in the VERSION HISTORY section
-4. **Test role activation logic** - Ensure conditional roles activate correctly
-5. **Validate output contracts** - JSON control blocks must be syntactically correct
-
-### Common Tasks:
-- **Adding new roles**: Update role definitions, FSM states, activation rules
-- **Modifying workflows**: Adjust shallow/deep paths, quality gates
-- **Updating sizing criteria**: Refine T-shirt sizing decision tree
-- **Enhancing methodologies**: Improve role-specific processes
-
-## Project-Specific Patterns
-
-### Documentation Strategy
-The PM role creates size-appropriate documentation:
-- **XS**: Optional micro-docs
-- **S**: Basic user docs + brief summary
-- **M**: User docs + technical summary + demo outline
-- **L/XL**: Complete suite + executive summary + public content
-
-### Quality Scaling
-Quality requirements scale with T-shirt size while maintaining core standards like "No Placeholder Code" and "Security Awareness" across all sizes.
-
-## Repository Context
-
-- **Branch**: `main` (primary development)
-- **Recent Activity**: Initial commit with ARIA v4 system
-- **Structure**: Minimal - focuses on the prompt engineering framework
-- **Purpose**: Hackathon project for demonstrating advanced AI agent architecture
-
-## v0.dev SDK Integration for Demo Generation
-
-### Overview
-This branch (`feature/v0solution`) uses the v0.dev SDK for generating interactive web-based demos from solution play use cases. The v0.dev platform specializes in creating production-ready React components and interfaces through AI-powered code generation.
-
-### Integration Objectives
-- **Replace OpenAI direct calls** with v0.dev SDK for UI generation
-- **Maintain compatibility** with existing Phase 1 architecture
-- **Generate interactive demos** that showcase Hero AI use cases
-- **Provide fallback mechanisms** for development/testing environments
-
-### Technical Implementation
-
-#### 1. Environment Configuration
-Required environment variables in `.env`:
-```bash
-V0_API_KEY=your_v0_api_key_here
-V0_BASE_URL=https://v0.dev/api  # Optional, uses default if not set
-AI_PROVIDER=v0  # Options: 'openai', 'v0', 'mock'
-```
-
-#### 2. AI Provider Abstraction
-The system uses a provider abstraction pattern:
+### Phase 1: PDF Auto-Discovery and Reading
 ```typescript
-interface AIProvider {
-  generateDemo(useCase: string, context: any): Promise<DemoResult>;
-  generateComponent(prompt: string): Promise<ComponentResult>;
+// Implementation in phase1/backend/src/services/docs-processor.ts
+export class DocsProcessor {
+  async scanDocsFolder(): Promise<string[]> {
+    const docsPath = path.join(process.cwd(), 'docs');
+    const files = await fs.readdir(docsPath);
+    return files.filter(file => file.toLowerCase().endsWith('.pdf'));
+  }
+
+  async readFirstPDF(): Promise<{filePath: string, content: string}> {
+    const pdfFiles = await this.scanDocsFolder();
+    if (pdfFiles.length === 0) throw new Error('No PDF files found in docs folder');
+    
+    const firstPDF = pdfFiles[0]; // Pick first PDF alphabetically
+    const filePath = path.join(process.cwd(), 'docs', firstPDF);
+    const content = await this.pdfParser.extractText(filePath);
+    
+    return { filePath, content };
+  }
 }
 ```
 
-#### 3. v0.dev Client Integration
-Location: `phase1/backend/src/v0-client.ts`
-- Handles v0.dev API authentication and requests
-- Transforms solution play content into v0-compatible prompts
-- Manages rate limiting and error handling
-- Provides TypeScript interfaces for v0.dev responses
+### Phase 2: Use Case Extraction with Azure OpenAI
+```typescript
+// Implementation in phase1/backend/src/services/usecase-extractor.ts
+export class UseCaseExtractor {
+  private azureOpenAI: OpenAI;
 
-#### 4. Demo Generation Workflow
-1. **PDF Processing**: Extract use case content (unchanged)
-2. **Prompt Engineering**: Transform content for v0.dev format
-3. **Component Generation**: Use v0.dev to create React components
-4. **Demo Assembly**: Combine components into complete demo
-5. **Local Serving**: Serve generated demo via Express
+  constructor() {
+    this.azureOpenAI = new OpenAI({
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      baseURL: process.env.AZURE_OPENAI_ENDPOINT,
+      defaultQuery: { 'api-version': '2024-02-15-preview' }
+    });
+  }
 
-### Usage Patterns
+  async extractFirstUseCase(pdfContent: string): Promise<UseCaseData> {
+    const prompt = `
+Analyze this Financial Services PDF and extract the FIRST complete use case suitable for demo generation.
 
-#### When to Use v0.dev Integration
-- Building user-facing demo interfaces
-- Creating interactive components for Hero AI use cases
-- Generating professional-looking prototypes quickly
-- Showcasing RFP automation with visual interfaces
+PDF Content: ${pdfContent.substring(0, 6000)}
 
-#### Developer Guidelines
-- **Environment Setup**: Always check `AI_PROVIDER` env var first
-- **Error Handling**: Implement graceful fallbacks to mock data
-- **Rate Limiting**: Respect v0.dev API limits (implement queuing if needed)
-- **Testing**: Use mock provider for unit tests
-- **Documentation**: Update component documentation when using v0-generated code
+Extract the FIRST viable use case with these details:
+1. **Title**: Clear, descriptive name
+2. **Category**: One of: Content Generation, Process Automation, Personalized Experience
+3. **Description**: What business problem it solves (2-3 sentences)
+4. **Key Capabilities**: List of 4-6 specific AI capabilities required
+5. **User Journey**: Step-by-step user interaction flow (5-7 steps)
+6. **Success Metrics**: How success is measured
+7. **Demo Features**: Specific UI components needed (forms, dashboards, charts, etc.)
+8. **Sample Data**: Types of synthetic data required
 
-### Quality Assurance
-- **Code Review**: All v0-generated components must be reviewed
-- **Security**: Sanitize any dynamic content in generated components
-- **Performance**: Monitor bundle size of generated components
-- **Accessibility**: Ensure v0-generated UI meets WCAG standards
+Return JSON format optimized for v0.dev React component generation:
+{
+  "title": "Use Case Name",
+  "category": "Content Generation|Process Automation|Personalized Experience", 
+  "description": "Business problem and solution overview",
+  "capabilities": ["capability1", "capability2", "capability3", "capability4"],
+  "userJourney": ["step1", "step2", "step3", "step4", "step5"],
+  "successMetrics": ["metric1", "metric2", "metric3"],
+  "demoFeatures": {
+    "components": ["form", "dashboard", "chart", "table", "upload"],
+    "interactions": ["upload", "process", "view results", "export"],
+    "dataTypes": ["documents", "analytics", "recommendations"]
+  },
+  "sampleData": {
+    "inputs": ["example input 1", "example input 2"],
+    "outputs": ["example output 1", "example output 2"]
+  }
+}
 
-### Troubleshooting
-- **API Key Issues**: Verify V0_API_KEY is set and valid
-- **Rate Limits**: Implement exponential backoff for API calls
-- **Generation Failures**: Fall back to static templates or mock data
-- **Component Errors**: Validate generated TypeScript before compilation
+Focus on use cases that can create compelling visual demos with forms, dashboards, and results displays.
+`;
+
+    const completion = await this.azureOpenAI.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a Financial Services solution analyst. Extract the FIRST viable use case optimized for professional demo generation.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    return JSON.parse(response);
+  }
+}
+```
+
+### Phase 3: V0 Prompt Generation
+```typescript
+// Implementation in phase1/backend/src/services/v0-prompt-generator.ts
+export class V0PromptGenerator {
+  generatePrompt(useCase: UseCaseData): string {
+    const categoryPrompts = {
+      'Content Generation': this.getContentGenerationPrompt(useCase),
+      'Process Automation': this.getProcessAutomationPrompt(useCase), 
+      'Personalized Experience': this.getPersonalizationPrompt(useCase)
+    };
+
+    return categoryPrompts[useCase.category] || this.getDefaultPrompt(useCase);
+  }
+
+  private getContentGenerationPrompt(useCase: UseCaseData): string {
+    return `
+Create a professional React application for "${useCase.title}" - a Financial Services content generation demo.
+
+Requirements:
+- **Business Context**: ${useCase.description}
+- **Key Capabilities**: ${useCase.capabilities.join(', ')}
+- **User Journey**: ${useCase.userJourney.join(' → ')}
+
+Build a multi-step interface with:
+1. **Input Section**: Document upload area, text input forms, parameter controls
+2. **Processing View**: Loading states, progress indicators, AI processing simulation
+3. **Results Dashboard**: Generated content display, confidence scores, editing tools
+4. **Export Options**: Download buttons, sharing features, refinement controls
+
+Design Requirements:
+- Use Tailwind CSS with a professional financial services color scheme (navy blues, whites, light grays)
+- Responsive design that works on desktop and tablet
+- Accessibility compliance (WCAG 2.1 AA)
+- Professional typography and spacing
+- Interactive elements with hover states and smooth transitions
+
+Sample Data to Include:
+- Input Examples: ${useCase.sampleData.inputs.join(', ')}
+- Output Examples: ${useCase.sampleData.outputs.join(', ')}
+
+Include realistic synthetic data that demonstrates the AI capability:
+- Mock processing times (2-5 seconds)
+- Confidence scores (85-98%)
+- Progress indicators showing analysis steps
+- Professional financial services content examples
+
+Components Needed: ${useCase.demoFeatures.components.join(', ')}
+Interactions: ${useCase.demoFeatures.interactions.join(', ')}
+
+Make it look like a production-ready enterprise AI application with polished UX.
+`;
+  }
+
+  private getProcessAutomationPrompt(useCase: UseCaseData): string {
+    return `
+Create a React dashboard for "${useCase.title}" - a Financial Services process automation demo.
+
+Requirements:
+- **Business Context**: ${useCase.description}
+- **Automation Capabilities**: ${useCase.capabilities.join(', ')}
+- **Workflow Steps**: ${useCase.userJourney.join(' → ')}
+
+Build a workflow automation dashboard with:
+1. **Process Overview**: Workflow visualization, status indicators, performance metrics
+2. **Task Management**: Active tasks list, priority queues, assignment controls
+3. **Analytics Dashboard**: Success rates, processing times, cost savings charts
+4. **Monitoring Panel**: Real-time alerts, compliance tracking, audit logs
+
+Design Requirements:
+- Enterprise dashboard aesthetic with data visualization
+- Use Chart.js or Recharts for analytics displays
+- Status indicators with color coding (green/yellow/red)
+- Professional card-based layout with clear hierarchy
+
+Sample Data Integration:
+- Process Metrics: ${useCase.successMetrics.join(', ')}
+- Workflow Examples: ${useCase.sampleData.inputs.join(', ')}
+- Automation Results: ${useCase.sampleData.outputs.join(', ')}
+
+Include realistic automation metrics:
+- Processing volumes (1000+ items/day)
+- Accuracy rates (94-99%)
+- Time savings (60-80% reduction)
+- Cost optimization (30-50% savings)
+
+Components: ${useCase.demoFeatures.components.join(', ')}
+Make it demonstrate clear business value with compelling metrics.
+`;
+  }
+
+  private getPersonalizationPrompt(useCase: UseCaseData): string {
+    return `
+Create a React application for "${useCase.title}" - a Financial Services personalization demo.
+
+Requirements:
+- **Personalization Focus**: ${useCase.description}
+- **AI Capabilities**: ${useCase.capabilities.join(', ')}
+- **Customer Journey**: ${useCase.userJourney.join(' → ')}
+
+Build a personalized customer experience with:
+1. **Customer Profile**: Demographics, preferences, financial goals, risk profile
+2. **AI Recommendations**: Personalized products, investment options, financial advice
+3. **Insights Dashboard**: Spending analysis, savings opportunities, goal tracking
+4. **Action Center**: Recommended actions, next steps, goal management
+
+Design Requirements:
+- Customer-centric design with warm, approachable colors
+- Personalized cards and recommendations
+- Progress bars for financial goals
+- Interactive elements for exploring options
+
+Sample Personalization Data:
+- Customer Types: ${useCase.sampleData.inputs.join(', ')}
+- Recommendation Types: ${useCase.sampleData.outputs.join(', ')}
+
+Include realistic customer scenarios:
+- Customer profiles (age, income, goals)
+- Personalized recommendations with reasoning
+- Goal tracking and progress visualization
+- Risk assessment and investment options
+
+Success Metrics Display: ${useCase.successMetrics.join(', ')}
+Components: ${useCase.demoFeatures.components.join(', ')}
+
+Create an engaging, personalized financial experience that demonstrates AI-driven insights.
+`;
+  }
+}
+```
+
+### Phase 4: V0 SDK Integration and Demo Generation
+```typescript
+// Implementation in phase1/backend/src/services/demo-generator.ts
+export class DemoGenerator {
+  private v0Client: V0Client;
+  private promptGenerator: V0PromptGenerator;
+
+  async generateDemo(useCase: UseCaseData): Promise<DemoResult> {
+    // 1. Generate optimized v0 prompt
+    const prompt = this.promptGenerator.generatePrompt(useCase);
+    
+    // 2. Call v0.dev API for React component generation
+    const v0Response = await this.v0Client.generateComponent({ 
+      prompt,
+      framework: 'react',
+      styling: 'tailwindcss'
+    });
+    
+    // 3. Enhance with synthetic data
+    const enhancedDemo = await this.enhanceWithSyntheticData(v0Response, useCase);
+    
+    // 4. Add professional finishing touches
+    return this.addProfessionalFeatures(enhancedDemo, useCase);
+  }
+
+  private async enhanceWithSyntheticData(demo: any, useCase: UseCaseData): Promise<any> {
+    // Add realistic synthetic data based on use case type
+    const syntheticData = this.generateSyntheticData(useCase);
+    
+    // Inject data into component props and state
+    return {
+      ...demo,
+      syntheticData,
+      metadata: {
+        useCase: useCase.title,
+        category: useCase.category,
+        generatedAt: new Date().toISOString(),
+        provider: 'v0-enhanced'
+      }
+    };
+  }
+
+  private generateSyntheticData(useCase: UseCaseData): any {
+    const dataGenerators = {
+      'Content Generation': () => ({
+        documents: ['RFP Response Document', 'Marketing Content', 'Proposal Template'],
+        processing: { duration: '3.2s', confidence: '94%', status: 'completed' },
+        results: useCase.sampleData.outputs
+      }),
+      'Process Automation': () => ({
+        workflows: ['KYC Processing', 'Loan Underwriting', 'Compliance Check'],
+        metrics: { processed: 1247, accuracy: '97%', timeSaved: '68%' },
+        tasks: this.generateTaskData()
+      }),
+      'Personalized Experience': () => ({
+        customers: this.generateCustomerProfiles(),
+        recommendations: this.generateRecommendations(),
+        insights: this.generatePersonalInsights()
+      })
+    };
+
+    return dataGenerators[useCase.category]?.() || {};
+  }
+}
+```
+
+## Environment Configuration
+
+### Required Environment Variables
+```bash
+# Azure OpenAI Configuration (for PDF analysis)
+AZURE_OPENAI_API_KEY=your_azure_openai_key
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+
+# v0.dev Configuration (for demo generation)
+V0_API_KEY=your_v0_api_key
+V0_BASE_URL=https://v0.dev/api
+
+# Provider Configuration
+AI_PROVIDER=hybrid  # Uses Azure OpenAI for analysis, v0 for generation
+USE_CASE_EXTRACTION_PROVIDER=azure-openai
+DEMO_GENERATION_PROVIDER=v0
+```
+
+## Development Workflow
+
+### 1. Run Complete Workflow
+```bash
+cd phase1/backend
+npm run generate-demo-from-docs
+```
+
+### 2. Individual Steps
+```bash
+# Step 1: Scan docs folder
+npm run scan-docs
+
+# Step 2: Extract use case from first PDF
+npm run extract-usecase
+
+# Step 3: Generate v0 prompt
+npm run generate-prompt
+
+# Step 4: Create demo with v0
+npm run generate-demo
+```
+
+### 3. Test with Mock Data
+```bash
+# Use mock providers for development
+export AI_PROVIDER=mock
+npm run generate-demo-mock
+```
+
+## Quality Standards
+
+### Generated Demo Requirements
+- **Professional UI**: Enterprise-grade financial services design
+- **Responsive**: Works on desktop, tablet, and mobile
+- **Accessible**: WCAG 2.1 AA compliance
+- **Interactive**: Realistic user interactions and feedback
+- **Data-Rich**: Compelling synthetic data that tells a story
+- **Performance**: Fast loading and smooth animations
+
+### Code Quality
+- TypeScript strict mode enabled
+- ESLint configuration for React and Node.js
+- Prettier formatting
+- Jest unit tests for all utilities
+- Integration tests for the complete workflow
+
+## Troubleshooting
+
+### Common Issues
+- **No PDFs Found**: Ensure PDF files exist in `docs/` folder
+- **Azure OpenAI Errors**: Verify API key and endpoint configuration
+- **v0.dev Rate Limits**: Implement exponential backoff and queuing
+- **Use Case Extraction Fails**: PDF content may be too complex or corrupted
+- **Demo Generation Errors**: v0 prompt may need refinement for specific use cases
+
+### Fallback Strategies
+- Use mock providers when APIs are unavailable
+- Pre-generated use case templates for common scenarios
+- Static demo templates as fallbacks
+- Graceful error handling with user-friendly messages
 
 ## Key Principles for AI Agents
 
-1. **Always start as Scrum Master** - Size the request first
-2. **Follow the selected workflow path exactly** - No role skipping
-3. **Scale quality to complexity** - Match rigor to T-shirt size
-4. **Document appropriately** - PM creates size-matched documentation
-5. **Maintain role clarity** - Always identify current role and next steps
-6. **Use appropriate AI provider** - Choose v0.dev for UI generation, respect environment configuration
+1. **Hybrid AI Strategy**: Use the right AI tool for each task (Azure OpenAI for analysis, v0 for generation)
+2. **Docs-First Approach**: Always start by reading the actual docs folder content
+3. **First Use Case Focus**: Extract and build demos for the first viable use case found
+4. **Professional Quality**: Generate enterprise-grade demos that could be shown to clients
+5. **Synthetic Data Integration**: Include realistic, compelling data that demonstrates business value
+6. **Responsive Design**: Ensure demos work across all device types
+7. **Error Resilience**: Provide graceful fallbacks when services are unavailable
 
-This project represents a sophisticated approach to AI agent orchestration with adaptive complexity management - treat it as a reference implementation for multi-role AI systems.
+This workflow transforms static solution play PDFs into interactive, professional demos automatically using the power of Azure OpenAI for content understanding and v0.dev for React component generation.

@@ -1,0 +1,1018 @@
+
+> solplay-phase1-backend@1.0.0 generate-demo-from-docs
+> tsx src/cli/docs-to-demo.ts
+
+≡ƒÜÇ Starting SolPlay DemoGen CLI...
+≡ƒôü Current working directory: C:\learn\demoable-solplay\hackathon-solplay-demogen
+≡ƒôï Command arguments: []
+≡ƒöì import.meta.url: file:///C:/learn/demoable-solplay/hackathon-solplay-demogen/phase1/backend/src/cli/docs-to-demo.ts
+≡ƒöì process.argv[1]: C:\learn\demoable-solplay\hackathon-solplay-demogen\phase1\backend\src\cli\docs-to-demo.ts
+Γ£à Running CLI
+≡ƒôÜ SolPlay DemoGen - Docs to Demo Workflow
+==========================================\n
+Γ£à Environment validation passed
+2025-09-17T01:23:08.358Z INFO [UseCaseExtractor] Azure OpenAI client initialized
+Metadata: {
+  "endpoint": "https://aoai-q2w5uxlkh4c6o.openai.azure.com/",
+  "deployment": "gpt-4.1",
+  "apiVersion": "2025-01-01-preview"
+}
+2025-09-17T01:23:08.361Z INFO [V0DemoBuilder] V0DemoBuilder initialized
+Metadata: {
+  "baseUrl": "https://api.v0.dev/v1/chat/completions",
+  "timeout": 60000,
+  "hasApiKey": true
+}
+2025-09-17T01:23:08.364Z INFO [DocsToDemo] DocsToDemo orchestrator initialized
+Metadata: {
+  "docsPath": "default"
+}
+\nΓÜÖ∩╕Å  Configuration:
+==================
+AI Provider: hybrid
+Azure OpenAI: Configured
+V0 API Key: Configured
+Mock Mode: Disabled
+Docs Path: ./docs
+Log Path: C:\learn\demoable-solplay\hackathon-solplay-demogen\demoapp.log
+\n
+≡ƒÜÇ Starting complete docs-to-demo workflow...
+
+2025-09-17T01:23:08.383Z INFO [UseCaseExtractor] Azure OpenAI client initialized
+Metadata: {
+  "endpoint": "https://aoai-q2w5uxlkh4c6o.openai.azure.com/",
+  "deployment": "gpt-4.1",
+  "apiVersion": "2025-01-01-preview"
+}
+2025-09-17T01:23:08.388Z INFO [V0DemoBuilder] V0DemoBuilder initialized
+Metadata: {
+  "baseUrl": "https://api.v0.dev/v1/chat/completions",
+  "timeout": 60000,
+  "hasApiKey": true
+}
+2025-09-17T01:23:08.391Z INFO [DocsToDemo] DocsToDemo orchestrator initialized
+Metadata: {
+  "docsPath": "default"
+}
+2025-09-17T01:23:08.394Z INFO [LoggingService] V0 log file cleared
+Metadata: {}
+2025-09-17T01:23:08.395Z INFO [DocsToDemo][executeWorkflow] Starting complete docs-to-demo workflow
+Metadata: {
+  "timestamp": "2025-09-17T01:23:08.393Z"
+}
+2025-09-17T01:23:08.397Z INFO [DocsToDemo][executeWorkflow] Stage 1: Scanning docs folder
+Metadata: {}
+2025-09-17T01:23:08.398Z INFO  Scanning docs folder for PDF files
+Metadata: {
+  "docsPath": "C:\\learn\\demoable-solplay\\hackathon-solplay-demogen\\docs"
+}
+2025-09-17T01:23:08.402Z INFO  PDF scan completed
+Metadata: {
+  "totalFiles": 1,
+  "files": [
+    {
+      "name": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+      "size": 3697798
+    }
+  ]
+}
+2025-09-17T01:23:08.407Z INFO  Selected first PDF for processing
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "filePath": "C:\\learn\\demoable-solplay\\hackathon-solplay-demogen\\docs\\Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "size": 3697798
+}
+2025-09-17T01:23:08.412Z INFO  PDF validation successful
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF"
+}
+2025-09-17T01:23:08.414Z INFO [DocsToDemo][executeWorkflow] Stage 2: Extracting text from PDF
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF"
+}
+2025-09-17T01:23:08.415Z INFO [PDFParser][extractText] Starting PDF text extraction with PyMuPDF
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "filePath": "C:\\learn\\demoable-solplay\\hackathon-solplay-demogen\\docs\\Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "size": 3697798
+}
+2025-09-17T01:23:08.574Z DEBUG [PDFParser][extractText] Page 1 raw structured text
+Metadata: {
+  "pageNum": 1,
+  "rawTextLength": 3883,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":250,\"w\":278,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":250,\"w\":278,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.576Z DEBUG [PDFParser][extractText] Page 1 extracted content
+Metadata: {
+  "pageNum": 1,
+  "extractedLength": 9,
+  "firstChars": "\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.606Z DEBUG [PDFParser][extractText] Page 2 raw structured text
+Metadata: {
+  "pageNum": 2,
+  "rawTextLength": 7892,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":376,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":376,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.608Z DEBUG [PDFParser][extractText] Page 2 extracted content
+Metadata: {
+  "pageNum": 2,
+  "extractedLength": 14,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.616Z DEBUG [PDFParser][extractText] Page 3 raw structured text
+Metadata: {
+  "pageNum": 3,
+  "rawTextLength": 5237,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":207,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":207,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.620Z DEBUG [PDFParser][extractText] Page 3 extracted content
+Metadata: {
+  "pageNum": 3,
+  "extractedLength": 7,
+  "firstChars": "\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.629Z DEBUG [PDFParser][extractText] Page 4 raw structured text
+Metadata: {
+  "pageNum": 4,
+  "rawTextLength": 2310,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":233,\"w\":170,\"h\":171},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":233,\"w\":170,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.631Z DEBUG [PDFParser][extractText] Page 4 extracted content
+Metadata: {
+  "pageNum": 4,
+  "extractedLength": 6,
+  "firstChars": "\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.651Z DEBUG [PDFParser][extractText] Page 5 raw structured text
+Metadata: {
+  "pageNum": 5,
+  "rawTextLength": 9660,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":233,\"w\":170,\"h\":171},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":233,\"w\":170,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.656Z DEBUG [PDFParser][extractText] Page 5 extracted content
+Metadata: {
+  "pageNum": 5,
+  "extractedLength": 13,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.664Z DEBUG [PDFParser][extractText] Page 6 raw structured text
+Metadata: {
+  "pageNum": 6,
+  "rawTextLength": 776,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":208,\"w\":454,\"h\":94},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":208,\"w\":454,\"h\":46},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.665Z DEBUG [PDFParser][extractText] Page 6 extracted content
+Metadata: {
+  "pageNum": 6,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.670Z DEBUG [PDFParser][extractText] Page 7 raw structured text
+Metadata: {
+  "pageNum": 7,
+  "rawTextLength": 1681,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":407,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":407,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.672Z DEBUG [PDFParser][extractText] Page 7 extracted content
+Metadata: {
+  "pageNum": 7,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.678Z DEBUG [PDFParser][extractText] Page 8 raw structured text
+Metadata: {
+  "pageNum": 8,
+  "rawTextLength": 2746,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":630,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":630,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.679Z DEBUG [PDFParser][extractText] Page 8 extracted content
+Metadata: {
+  "pageNum": 8,
+  "extractedLength": 4,
+  "firstChars": "\n\n\n\n"
+}
+2025-09-17T01:23:08.697Z DEBUG [PDFParser][extractText] Page 9 raw structured text
+Metadata: {
+  "pageNum": 9,
+  "rawTextLength": 5903,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":22,\"y\":67,\"w\":538,\"h\":122},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":22,\"y\":67,\"w\":163,\"h\":21},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"n"
+}
+2025-09-17T01:23:08.698Z DEBUG [PDFParser][extractText] Page 9 extracted content
+Metadata: {
+  "pageNum": 9,
+  "extractedLength": 14,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.705Z DEBUG [PDFParser][extractText] Page 10 raw structured text
+Metadata: {
+  "pageNum": 10,
+  "rawTextLength": 4880,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":813,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":813,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.708Z DEBUG [PDFParser][extractText] Page 10 extracted content
+Metadata: {
+  "pageNum": 10,
+  "extractedLength": 10,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.726Z DEBUG [PDFParser][extractText] Page 11 raw structured text
+Metadata: {
+  "pageNum": 11,
+  "rawTextLength": 10830,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"font\":{\"name\":\"BCDIEE+SegoeUI-Semibold\",\"family\":\"sans-serif\",\"weight\":\"bold\""
+}
+2025-09-17T01:23:08.727Z DEBUG [PDFParser][extractText] Page 11 extracted content
+Metadata: {
+  "pageNum": 11,
+  "extractedLength": 34,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.730Z DEBUG [PDFParser][extractText] Page 12 raw structured text
+Metadata: {
+  "pageNum": 12,
+  "rawTextLength": 577,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":232,\"w\":497,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":232,\"w\":497,\"h\":46},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.731Z DEBUG [PDFParser][extractText] Page 12 extracted content
+Metadata: {
+  "pageNum": 12,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.734Z DEBUG [PDFParser][extractText] Page 13 raw structured text
+Metadata: {
+  "pageNum": 13,
+  "rawTextLength": 1699,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":301,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":301,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.736Z DEBUG [PDFParser][extractText] Page 13 extracted content
+Metadata: {
+  "pageNum": 13,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.748Z DEBUG [PDFParser][extractText] Page 14 raw structured text
+Metadata: {
+  "pageNum": 14,
+  "rawTextLength": 2503,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":454,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":454,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.749Z DEBUG [PDFParser][extractText] Page 14 extracted content
+Metadata: {
+  "pageNum": 14,
+  "extractedLength": 4,
+  "firstChars": "\n\n\n\n"
+}
+2025-09-17T01:23:08.758Z DEBUG [PDFParser][extractText] Page 15 raw structured text
+Metadata: {
+  "pageNum": 15,
+  "rawTextLength": 7704,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":22,\"y\":67,\"w\":512,\"h\":122},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":22,\"y\":67,\"w\":159,\"h\":21},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"n"
+}
+2025-09-17T01:23:08.760Z DEBUG [PDFParser][extractText] Page 15 extracted content
+Metadata: {
+  "pageNum": 15,
+  "extractedLength": 17,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.765Z DEBUG [PDFParser][extractText] Page 16 raw structured text
+Metadata: {
+  "pageNum": 16,
+  "rawTextLength": 4864,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":812,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":812,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.767Z DEBUG [PDFParser][extractText] Page 16 extracted content
+Metadata: {
+  "pageNum": 16,
+  "extractedLength": 10,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.782Z DEBUG [PDFParser][extractText] Page 17 raw structured text
+Metadata: {
+  "pageNum": 17,
+  "rawTextLength": 10830,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"font\":{\"name\":\"BCDIEE+SegoeUI-Semibold\",\"family\":\"sans-serif\",\"weight\":\"bold\""
+}
+2025-09-17T01:23:08.783Z DEBUG [PDFParser][extractText] Page 17 extracted content
+Metadata: {
+  "pageNum": 17,
+  "extractedLength": 34,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.785Z DEBUG [PDFParser][extractText] Page 18 raw structured text
+Metadata: {
+  "pageNum": 18,
+  "rawTextLength": 784,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":208,\"w\":517,\"h\":94},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":208,\"w\":517,\"h\":46},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.788Z DEBUG [PDFParser][extractText] Page 18 extracted content
+Metadata: {
+  "pageNum": 18,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.792Z DEBUG [PDFParser][extractText] Page 19 raw structured text
+Metadata: {
+  "pageNum": 19,
+  "rawTextLength": 1890,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":307,\"h\":128},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":253,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"n"
+}
+2025-09-17T01:23:08.793Z DEBUG [PDFParser][extractText] Page 19 extracted content
+Metadata: {
+  "pageNum": 19,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.801Z DEBUG [PDFParser][extractText] Page 20 raw structured text
+Metadata: {
+  "pageNum": 20,
+  "rawTextLength": 2557,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":741,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":741,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.803Z DEBUG [PDFParser][extractText] Page 20 extracted content
+Metadata: {
+  "pageNum": 20,
+  "extractedLength": 4,
+  "firstChars": "\n\n\n\n"
+}
+2025-09-17T01:23:08.813Z DEBUG [PDFParser][extractText] Page 21 raw structured text
+Metadata: {
+  "pageNum": 21,
+  "rawTextLength": 7128,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":22,\"y\":67,\"w\":163,\"h\":155},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":22,\"y\":67,\"w\":159,\"h\":21},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"n"
+}
+2025-09-17T01:23:08.814Z DEBUG [PDFParser][extractText] Page 21 extracted content
+Metadata: {
+  "pageNum": 21,
+  "extractedLength": 16,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.822Z DEBUG [PDFParser][extractText] Page 22 raw structured text
+Metadata: {
+  "pageNum": 22,
+  "rawTextLength": 10830,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"font\":{\"name\":\"BCDIEE+SegoeUI-Semibold\",\"family\":\"sans-serif\",\"weight\":\"bold\""
+}
+2025-09-17T01:23:08.823Z DEBUG [PDFParser][extractText] Page 22 extracted content
+Metadata: {
+  "pageNum": 22,
+  "extractedLength": 34,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.826Z DEBUG [PDFParser][extractText] Page 23 raw structured text
+Metadata: {
+  "pageNum": 23,
+  "rawTextLength": 777,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":208,\"w\":518,\"h\":94},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":208,\"w\":518,\"h\":46},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.827Z DEBUG [PDFParser][extractText] Page 23 extracted content
+Metadata: {
+  "pageNum": 23,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.830Z DEBUG [PDFParser][extractText] Page 24 raw structured text
+Metadata: {
+  "pageNum": 24,
+  "rawTextLength": 1922,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":411,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":273,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.831Z DEBUG [PDFParser][extractText] Page 24 extracted content
+Metadata: {
+  "pageNum": 24,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.839Z DEBUG [PDFParser][extractText] Page 25 raw structured text
+Metadata: {
+  "pageNum": 25,
+  "rawTextLength": 2612,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":691,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":691,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.842Z DEBUG [PDFParser][extractText] Page 25 extracted content
+Metadata: {
+  "pageNum": 25,
+  "extractedLength": 4,
+  "firstChars": "\n\n\n\n"
+}
+2025-09-17T01:23:08.847Z DEBUG [PDFParser][extractText] Page 26 raw structured text
+Metadata: {
+  "pageNum": 26,
+  "rawTextLength": 5977,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":22,\"y\":67,\"w\":543,\"h\":122},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":22,\"y\":67,\"w\":159,\"h\":21},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"n"
+}
+2025-09-17T01:23:08.849Z DEBUG [PDFParser][extractText] Page 26 extracted content
+Metadata: {
+  "pageNum": 26,
+  "extractedLength": 16,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.855Z DEBUG [PDFParser][extractText] Page 27 raw structured text
+Metadata: {
+  "pageNum": 27,
+  "rawTextLength": 5107,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":726,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":726,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.856Z DEBUG [PDFParser][extractText] Page 27 extracted content
+Metadata: {
+  "pageNum": 27,
+  "extractedLength": 10,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.863Z DEBUG [PDFParser][extractText] Page 28 raw structured text
+Metadata: {
+  "pageNum": 28,
+  "rawTextLength": 10830,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"font\":{\"name\":\"BCDIEE+SegoeUI-Semibold\",\"family\":\"sans-serif\",\"weight\":\"bold\""
+}
+2025-09-17T01:23:08.864Z DEBUG [PDFParser][extractText] Page 28 extracted content
+Metadata: {
+  "pageNum": 28,
+  "extractedLength": 34,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.866Z DEBUG [PDFParser][extractText] Page 29 raw structured text
+Metadata: {
+  "pageNum": 29,
+  "rawTextLength": 570,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":232,\"w\":376,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":232,\"w\":376,\"h\":46},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.867Z DEBUG [PDFParser][extractText] Page 29 extracted content
+Metadata: {
+  "pageNum": 29,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.870Z DEBUG [PDFParser][extractText] Page 30 raw structured text
+Metadata: {
+  "pageNum": 30,
+  "rawTextLength": 1673,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":179,\"h\":85},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":167,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.874Z DEBUG [PDFParser][extractText] Page 30 extracted content
+Metadata: {
+  "pageNum": 30,
+  "extractedLength": 2,
+  "firstChars": "\n\n"
+}
+2025-09-17T01:23:08.882Z DEBUG [PDFParser][extractText] Page 31 raw structured text
+Metadata: {
+  "pageNum": 31,
+  "rawTextLength": 2975,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":37,\"w\":354,\"h\":42},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":37,\"w\":354,\"h\":42},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.883Z DEBUG [PDFParser][extractText] Page 31 extracted content
+Metadata: {
+  "pageNum": 31,
+  "extractedLength": 4,
+  "firstChars": "\n\n\n\n"
+}
+2025-09-17T01:23:08.894Z DEBUG [PDFParser][extractText] Page 32 raw structured text
+Metadata: {
+  "pageNum": 32,
+  "rawTextLength": 8613,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":22,\"y\":67,\"w\":163,\"h\":88},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":22,\"y\":67,\"w\":163,\"h\":21},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\"no"
+}
+2025-09-17T01:23:08.895Z DEBUG [PDFParser][extractText] Page 32 extracted content
+Metadata: {
+  "pageNum": 32,
+  "extractedLength": 16,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.901Z DEBUG [PDFParser][extractText] Page 33 raw structured text
+Metadata: {
+  "pageNum": 33,
+  "rawTextLength": 10830,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":46,\"y\":32,\"w\":606,\"h\":46},\"font\":{\"name\":\"BCDIEE+SegoeUI-Semibold\",\"family\":\"sans-serif\",\"weight\":\"bold\""
+}
+2025-09-17T01:23:08.904Z DEBUG [PDFParser][extractText] Page 33 extracted content
+Metadata: {
+  "pageNum": 33,
+  "extractedLength": 34,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.913Z DEBUG [PDFParser][extractText] Page 34 raw structured text
+Metadata: {
+  "pageNum": 34,
+  "rawTextLength": 6375,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":200,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":146,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.914Z DEBUG [PDFParser][extractText] Page 34 extracted content
+Metadata: {
+  "pageNum": 34,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.919Z DEBUG [PDFParser][extractText] Page 35 raw structured text
+Metadata: {
+  "pageNum": 35,
+  "rawTextLength": 5113,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":176,\"h\":119},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":165,\"h\":23},\"font\":{\"name\":\"BCDHEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.922Z DEBUG [PDFParser][extractText] Page 35 extracted content
+Metadata: {
+  "pageNum": 35,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.929Z DEBUG [PDFParser][extractText] Page 36 raw structured text
+Metadata: {
+  "pageNum": 36,
+  "rawTextLength": 5582,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":197,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":188,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.931Z DEBUG [PDFParser][extractText] Page 36 extracted content
+Metadata: {
+  "pageNum": 36,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.936Z DEBUG [PDFParser][extractText] Page 37 raw structured text
+Metadata: {
+  "pageNum": 37,
+  "rawTextLength": 5889,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":191,\"h\":95},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":134,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.940Z DEBUG [PDFParser][extractText] Page 37 extracted content
+Metadata: {
+  "pageNum": 37,
+  "extractedLength": 12,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.949Z DEBUG [PDFParser][extractText] Page 38 raw structured text
+Metadata: {
+  "pageNum": 38,
+  "rawTextLength": 6062,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":177,\"h\":119},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":177,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.950Z DEBUG [PDFParser][extractText] Page 38 extracted content
+Metadata: {
+  "pageNum": 38,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.963Z DEBUG [PDFParser][extractText] Page 39 raw structured text
+Metadata: {
+  "pageNum": 39,
+  "rawTextLength": 5903,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":167,\"h\":95},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":112,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:08.965Z DEBUG [PDFParser][extractText] Page 39 extracted content
+Metadata: {
+  "pageNum": 39,
+  "extractedLength": 12,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.974Z DEBUG [PDFParser][extractText] Page 40 raw structured text
+Metadata: {
+  "pageNum": 40,
+  "rawTextLength": 5772,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":199,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":199,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.975Z DEBUG [PDFParser][extractText] Page 40 extracted content
+Metadata: {
+  "pageNum": 40,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.980Z DEBUG [PDFParser][extractText] Page 41 raw structured text
+Metadata: {
+  "pageNum": 41,
+  "rawTextLength": 5467,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":169,\"h\":119},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":136,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.982Z DEBUG [PDFParser][extractText] Page 41 extracted content
+Metadata: {
+  "pageNum": 41,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.990Z DEBUG [PDFParser][extractText] Page 42 raw structured text
+Metadata: {
+  "pageNum": 42,
+  "rawTextLength": 5327,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":194,\"h\":119},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":181,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:08.992Z DEBUG [PDFParser][extractText] Page 42 extracted content
+Metadata: {
+  "pageNum": 42,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:08.997Z DEBUG [PDFParser][extractText] Page 43 raw structured text
+Metadata: {
+  "pageNum": 43,
+  "rawTextLength": 6049,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":199,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":132,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.000Z DEBUG [PDFParser][extractText] Page 43 extracted content
+Metadata: {
+  "pageNum": 43,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.007Z DEBUG [PDFParser][extractText] Page 44 raw structured text
+Metadata: {
+  "pageNum": 44,
+  "rawTextLength": 5561,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":185,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":143,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.009Z DEBUG [PDFParser][extractText] Page 44 extracted content
+Metadata: {
+  "pageNum": 44,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.015Z DEBUG [PDFParser][extractText] Page 45 raw structured text
+Metadata: {
+  "pageNum": 45,
+  "rawTextLength": 5606,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":186,\"h\":95},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":117,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:09.017Z DEBUG [PDFParser][extractText] Page 45 extracted content
+Metadata: {
+  "pageNum": 45,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.024Z DEBUG [PDFParser][extractText] Page 46 raw structured text
+Metadata: {
+  "pageNum": 46,
+  "rawTextLength": 5997,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":176,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":176,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.025Z DEBUG [PDFParser][extractText] Page 46 extracted content
+Metadata: {
+  "pageNum": 46,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.030Z DEBUG [PDFParser][extractText] Page 47 raw structured text
+Metadata: {
+  "pageNum": 47,
+  "rawTextLength": 5811,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":185,\"h\":95},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":160,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:09.032Z DEBUG [PDFParser][extractText] Page 47 extracted content
+Metadata: {
+  "pageNum": 47,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.038Z DEBUG [PDFParser][extractText] Page 48 raw structured text
+Metadata: {
+  "pageNum": 48,
+  "rawTextLength": 5640,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":176,\"h\":119},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":135,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.042Z DEBUG [PDFParser][extractText] Page 48 extracted content
+Metadata: {
+  "pageNum": 48,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.056Z DEBUG [PDFParser][extractText] Page 49 raw structured text
+Metadata: {
+  "pageNum": 49,
+  "rawTextLength": 6019,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":187,\"h\":143},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":187,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.059Z DEBUG [PDFParser][extractText] Page 49 extracted content
+Metadata: {
+  "pageNum": 49,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.065Z DEBUG [PDFParser][extractText] Page 50 raw structured text
+Metadata: {
+  "pageNum": 50,
+  "rawTextLength": 5618,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":139,\"h\":95},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":134,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":\""
+}
+2025-09-17T01:23:09.067Z DEBUG [PDFParser][extractText] Page 50 extracted content
+Metadata: {
+  "pageNum": 50,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.073Z DEBUG [PDFParser][extractText] Page 51 raw structured text
+Metadata: {
+  "pageNum": 51,
+  "rawTextLength": 6522,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":204,\"h\":167},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":182,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.075Z DEBUG [PDFParser][extractText] Page 51 extracted content
+Metadata: {
+  "pageNum": 51,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.083Z DEBUG [PDFParser][extractText] Page 52 raw structured text
+Metadata: {
+  "pageNum": 52,
+  "rawTextLength": 6090,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":199,\"h\":119},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":175,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.085Z DEBUG [PDFParser][extractText] Page 52 extracted content
+Metadata: {
+  "pageNum": 52,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.094Z DEBUG [PDFParser][extractText] Page 53 raw structured text
+Metadata: {
+  "pageNum": 53,
+  "rawTextLength": 7584,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":196,\"h\":215},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":142,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.095Z DEBUG [PDFParser][extractText] Page 53 extracted content
+Metadata: {
+  "pageNum": 53,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.101Z DEBUG [PDFParser][extractText] Page 54 raw structured text
+Metadata: {
+  "pageNum": 54,
+  "rawTextLength": 6648,
+  "firstChars": "{\"blocks\":[{\"type\":\"text\",\"bbox\":{\"x\":24,\"y\":146,\"w\":196,\"h\":167},\"lines\":[{\"wmode\":0,\"bbox\":{\"x\":24,\"y\":146,\"w\":123,\"h\":23},\"font\":{\"name\":\"BCDEEE+SegoeSans-240000-2580000\",\"family\":\"serif\",\"weight\":"
+}
+2025-09-17T01:23:09.105Z DEBUG [PDFParser][extractText] Page 54 extracted content
+Metadata: {
+  "pageNum": 54,
+  "extractedLength": 11,
+  "firstChars": "\n\n\n\n\n\n\n\n\n\n\n"
+}
+2025-09-17T01:23:09.116Z DEBUG [PDFParser][preprocessText] Preprocessing PDF text
+Metadata: {
+  "originalLength": 709
+}
+2025-09-17T01:23:09.118Z DEBUG [PDFParser][preprocessText] Text preprocessing completed
+Metadata: {
+  "processedLength": 0
+}
+2025-09-17T01:23:09.120Z INFO [PDFParser][extractText] PDF text extraction completed successfully
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "totalPages": 54,
+  "textLength": 0,
+  "duration": 705
+}
+2025-09-17T01:23:09.122Z DEBUG [PDFParser][preprocessText] Preprocessing PDF text
+Metadata: {}
+2025-09-17T01:23:09.124Z ERROR [PDFParser][preprocessText] Text preprocessing failed
+Metadata: {
+  "error": "text.replace is not a function"
+}
+2025-09-17T01:23:09.126Z INFO [DocsToDemo][executeWorkflow] Stage 3: Extracting use case with Azure OpenAI
+Metadata: {}
+2025-09-17T01:23:09.127Z INFO [UseCaseExtractor][extractFirstUseCase] Starting use case extraction
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "totalPages": 54
+}
+2025-09-17T01:23:09.129Z INFO [AzureOpenAI] Azure OpenAI prompt_generation
+Metadata: {
+  "operation": "use_case_extraction",
+  "prompt": "\nAnalyze this Financial Services PDF and extract the FIRST complete use case suitable for demo generation.\n\nPDF Content: Document: Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF - Financial Services AI Use Cases\n\nExtract the FIRST viable use case with these details:\n1. **Title**: Clear, descriptive name\n2. **Category**: One of: Content Generation, Process Automation, Personalized Experience\n3. **Description**: What business problem it solves (2-3 sentences)\n4. **Key Capabilities**: List of 4-6 specific AI capabilities required\n5. **User Journey**: Step-by-step user interaction flow (5-7 steps)\n6. **Success Metrics**: How success is measured\n7. **Demo Features**: Specific UI components needed (forms, dashboards, charts, etc.)\n8. **Sample Data**: Types of synthetic data required\n\nReturn JSON format optimized for v0.dev React component generation:\n{\n  \"title\": \"Use Case Name\",\n  \"category\": \"Content Generation|Process Automation|Personalized Experience\", \n  \"description\": \"Business problem and solution overview\",\n  \"capabilities\": [\"capability1\", \"capability2\", \"capability3\", \"capability4\"],\n  \"userJourney\": [\"step1\", \"step2\", \"step3\", \"step4\", \"step5\"],\n  \"successMetrics\": [\"metric1\", \"metric2\", \"metric3\"],\n  \"demoFeatures\": {\n    \"components\": [\"form\", \"dashboard\", \"chart\", \"table\", \"upload\"],\n    \"interactions\": [\"upload\", \"process\", \"view results\", \"export\"],\n    \"dataTypes\": [\"documents\", \"analytics\", \"recommendations\"]\n  },\n  \"sampleData\": {\n    \"inputs\": [\"example input 1\", \"example input 2\"],\n    \"outputs\": [\"example output 1\", \"example output 2\"]\n  }\n}\n\nFocus on use cases that can create compelling visual demos with forms, dashboards, and results displays.\nReturn ONLY the JSON object without any markdown formatting or code blocks.\n",
+  "textLength": 129
+}
+2025-09-17T01:23:09.132Z INFO [AzureOpenAI] Azure OpenAI api_request
+Metadata: {
+  "model": "gpt-4.1",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a Financial Services solution analyst. Extract the FIRST viable use case optimized for professional demo generation. Return only valid JSON without any markdown formatting or code blocks."
+    },
+    {
+      "role": "user",
+      "content": "\nAnalyze this Financial Services PDF and extract the FIRST complete use case suitable for demo generation.\n\nPDF Content: Document: Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF - Financial Services AI Use Cases\n\nExtract the FIRST viable use case with these details:\n1. **Title**: Clear, descriptive name\n2. **Category**: One of: Content Generation, Process Automation, Personalized Experience\n3. **Description**: What business problem it solves (2-3 sentences)\n4. **Key Capabilities**: List of 4-6 specific AI capabilities required\n5. **User Journey**: Step-by-step user interaction flow (5-7 steps)\n6. **Success Metrics**: How success is measured\n7. **Demo Features**: Specific UI components needed (forms, dashboards, charts, etc.)\n8. **Sample Data**: Types of synthetic data required\n\nReturn JSON format optimized for v0.dev React component generation:\n{\n  \"title\": \"Use Case Name\",\n  \"category\": \"Content Generation|Process Automation|Personalized Experience\", \n  \"description\": \"Business problem and solution overview\",\n  \"capabilities\": [\"capability1\", \"capability2\", \"capability3\", \"capability4\"],\n  \"userJourney\": [\"step1\", \"step2\", \"step3\", \"step4\", \"step5\"],\n  \"successMetrics\": [\"metric1\", \"metric2\", \"metric3\"],\n  \"demoFeatures\": {\n    \"components\": [\"form\", \"dashboard\", \"chart\", \"table\", \"upload\"],\n    \"interactions\": [\"upload\", \"process\", \"view results\", \"export\"],\n    \"dataTypes\": [\"documents\", \"analytics\", \"recommendations\"]\n  },\n  \"sampleData\": {\n    \"inputs\": [\"example input 1\", \"example input 2\"],\n    \"outputs\": [\"example output 1\", \"example output 2\"]\n  }\n}\n\nFocus on use cases that can create compelling visual demos with forms, dashboards, and results displays.\nReturn ONLY the JSON object without any markdown formatting or code blocks.\n"
+    }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 2000
+}
+2025-09-17T01:23:12.547Z INFO [AzureOpenAI] Azure OpenAI api_response
+Metadata: {
+  "completion": {
+    "choices": [
+      {
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "protected_material_code": {
+            "filtered": false,
+            "detected": false
+          },
+          "protected_material_text": {
+            "filtered": false,
+            "detected": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        },
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "annotations": [],
+          "content": "{\n  \"title\": \"Automated Investment Portfolio Generation\",\n  \"category\": \"Content Generation\",\n  \"description\": \"Financial advisors and clients often struggle to quickly generate personalized investment portfolios that align with risk profiles and financial goals. This use case leverages AI to automate portfolio creation, ensuring tailored recommendations and faster onboarding.\",\n  \"capabilities\": [\n    \"Natural Language Processing for client input analysis\",\n    \"Risk profiling and scoring\",\n    \"AI-driven portfolio optimization\",\n    \"Automated report generation\",\n    \"Recommendation engine\"\n  ],\n  \"userJourney\": [\n    \"User logs into the platform\",\n    \"User fills out a form detailing financial goals, risk tolerance, and investment preferences\",\n    \"AI analyzes inputs and generates a risk profile\",\n    \"System automatically creates a recommended investment portfolio\",\n    \"User reviews portfolio details and simulated performance dashboard\",\n    \"User downloads or exports the report\",\n    \"User provides feedback or requests adjustments\"\n  ],\n  \"successMetrics\": [\n    \"Time to generate portfolio\",\n    \"Accuracy of risk profiling\",\n    \"User satisfaction score\",\n    \"Portfolio performance simulation accuracy\"\n  ],\n  \"demoFeatures\": {\n    \"components\": [\"form\", \"dashboard\", \"chart\", \"table\", \"export button\"],\n    \"interactions\": [\"form submission\", \"view dashboard\", \"download report\", \"request adjustment\"],\n    \"dataTypes\": [\"client profiles\", \"portfolio analytics\", \"recommendations\"]\n  },\n  \"sampleData\": {\n    \"inputs\": [\"Sample client profile with age, income, goals, risk tolerance\", \"Investment preferences (e.g., ESG, sector focus)\"],\n    \"outputs\": [\"Generated portfolio allocation table\", \"Performance simulation chart\", \"Risk profile summary\"]\n  }\n}",
+          "refusal": null,
+          "role": "assistant"
+        }
+      }
+    ],
+    "created": 1758072189,
+    "id": "chatcmpl-CGbAzOwyvwkEtegIgFtj7rmFkHgHf",
+    "model": "gpt-4.1-2025-04-14",
+    "object": "chat.completion",
+    "prompt_filter_results": [
+      {
+        "prompt_index": 0,
+        "content_filter_results": {
+          "hate": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "jailbreak": {
+            "filtered": false,
+            "detected": false
+          },
+          "self_harm": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "sexual": {
+            "filtered": false,
+            "severity": "safe"
+          },
+          "violence": {
+            "filtered": false,
+            "severity": "safe"
+          }
+        }
+      }
+    ],
+    "system_fingerprint": "fp_c79ab13e31",
+    "usage": {
+      "completion_tokens": 354,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens": 475,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 829
+    }
+  },
+  "usage": {
+    "completion_tokens": 354,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": 0,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens": 475,
+    "prompt_tokens_details": {
+      "audio_tokens": 0,
+      "cached_tokens": 0
+    },
+    "total_tokens": 829
+  },
+  "duration": 3418
+}
+2025-09-17T01:23:12.550Z DEBUG [UseCaseExtractor][validateAndStructureUseCase] Use case validation and structuring completed
+Metadata: {
+  "title": "Automated Investment Portfolio Generation",
+  "category": "Content Generation",
+  "capabilitiesCount": 5
+}
+2025-09-17T01:23:12.553Z INFO [UseCaseExtractor][extractFirstUseCase] Use case extraction completed successfully
+Metadata: {
+  "fileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "extractedTitle": "Automated Investment Portfolio Generation",
+  "category": "Content Generation",
+  "capabilitiesCount": 5,
+  "duration": 3418
+}
+2025-09-17T01:23:12.558Z INFO [DocsToDemo][executeWorkflow] Stage 4: Generating v0.dev prompt
+Metadata: {
+  "useCaseTitle": "Automated Investment Portfolio Generation",
+  "category": "Content Generation"
+}
+2025-09-17T01:23:12.561Z INFO [V0PromptGenerator][generatePrompt] Generating v0.dev prompt
+Metadata: {
+  "title": "Automated Investment Portfolio Generation",
+  "category": "Content Generation",
+  "componentsCount": 5
+}
+2025-09-17T01:23:12.566Z INFO [V0Client] V0 prompt_generation
+Metadata: {
+  "timestamp": "2025-09-17T01:23:12.564Z",
+  "operation": "prompt_generation",
+  "prompt": "\nCreate a professional React application for \"Automated Investment Portfolio Generation\" - a Financial Services content generation demo.\n\n## Business Context\nFinancial advisors and clients often struggle to quickly generate personalized investment portfolios that align with risk profiles and financial goals. This use case leverages AI to automate portfolio creation, ensuring tailored recommendations and faster onboarding.\n\n## Key AI Capabilities\nΓÇó Natural Language Processing for client input analysis\nΓÇó Risk profiling and scoring\nΓÇó AI-driven portfolio optimization\nΓÇó Automated report generation\nΓÇó Recommendation engine\n\n## User Journey Flow\n1. User logs into the platform\n2. User fills out a form detailing financial goals, risk tolerance, and investment preferences\n3. AI analyzes inputs and generates a risk profile\n4. System automatically creates a recommended investment portfolio\n5. User reviews portfolio details and simulated performance dashboard\n6. User downloads or exports the report\n7. User provides feedback or requests adjustments\n\n## Application Requirements\n\n### Multi-Step Interface Design:\n1. **Input Section**: \n   - Document upload area with drag-and-drop functionality\n   - Text input forms for parameters and customization\n   - File type validation and progress indicators\n   - Parameter controls for AI processing options\n\n2. **Processing View**: \n   - Real-time loading states with progress bars\n   - Step-by-step progress indicators showing AI analysis phases\n   - Estimated time remaining and processing status\n   - Cancel/pause processing options\n\n3. **Results Dashboard**: \n   - Generated content display with syntax highlighting\n   - Confidence scores and quality metrics (85-98%)\n   - Side-by-side comparison with original content\n   - Interactive editing tools and refinement options\n\n4. **Export & Actions**: \n   - Multiple download formats (PDF, Word, JSON)\n   - Sharing features with collaboration tools\n   - Save to workspace functionality\n   - Refinement and regeneration controls\n\n### Design Requirements:\n- Use Tailwind CSS with professional financial services color palette:\n  - Primary: Navy blue (#1e3a8a), Deep blue (#1e40af)\n  - Secondary: Light gray (#f8fafc), Medium gray (#64748b)\n  - Accent: Green (#059669) for success, Orange (#ea580c) for warnings\n- Responsive design optimized for desktop (1440px+) and tablet (768px+)\n- WCAG 2.1 AA accessibility compliance with proper ARIA labels\n- Professional typography using Inter or similar sans-serif fonts\n- Smooth transitions and micro-interactions for enhanced UX\n- Loading skeletons and optimistic UI updates\n\n### Sample Data Integration:\n**Input Examples:**\nΓÇó Sample client profile with age, income, goals, risk tolerance\nΓÇó Investment preferences (e.g., ESG, sector focus)\n\n**Output Examples:**\nΓÇó Generated portfolio allocation table\nΓÇó Performance simulation chart\nΓÇó Risk profile summary\n\n### Realistic AI Simulation:\n- Mock processing times: 2-5 seconds with realistic progress\n- Confidence scores: 85-98% with detailed breakdowns\n- Progress indicators showing: \"Analyzing content...\", \"Generating output...\", \"Finalizing results...\"\n- Professional financial services content examples with industry terminology\n\n### Required Components:\nΓÇó form\nΓÇó dashboard\nΓÇó chart\nΓÇó table\nΓÇó export button\n\n### User Interactions:\nΓÇó form submission\nΓÇó view dashboard\nΓÇó download report\nΓÇó request adjustment\n\n### Success Metrics Display:\nΓÇó Time to generate portfolio\nΓÇó Accuracy of risk profiling\nΓÇó User satisfaction score\nΓÇó Portfolio performance simulation accuracy\n\nCreate a production-ready enterprise AI application with polished UX that demonstrates clear business value and ROI for financial services organizations.\n\nThe application should feel like a real SaaS product that financial professionals would use daily, with enterprise-grade performance, security considerations, and professional branding.\n"
+}
+2025-09-17T01:23:12.568Z INFO [V0PromptGenerator][generatePrompt] V0 prompt generation completed
+Metadata: {
+  "title": "Automated Investment Portfolio Generation",
+  "promptLength": 3889,
+  "category": "Content Generation"
+}
+2025-09-17T01:23:12.571Z INFO [DocsToDemo][executeWorkflow] Stage 5: Generating demo with v0.dev
+Metadata: {
+  "promptLength": 3889
+}
+2025-09-17T01:23:12.573Z INFO [V0DemoBuilder][generateDemo] Starting demo generation
+Metadata: {
+  "useCase": "Automated Investment Portfolio Generation",
+  "category": "Content Generation",
+  "promptLength": 3889
+}
+2025-09-17T01:23:12.577Z INFO [V0Client] V0 api_request
+Metadata: {
+  "timestamp": "2025-09-17T01:23:12.576Z",
+  "operation": "api_request",
+  "request": {
+    "model": "v0-1.5-lg",
+    "messages": [
+      {
+        "role": "user",
+        "content": "\nCreate a professional React application for \"Automated Investment Portfolio Generation\" - a Financial Services content generation demo.\n\n## Business Context\nFinancial advisors and clients often struggle to quickly generate personalized investment portfolios that align with risk profiles and financial goals. This use case leverages AI to automate portfolio creation, ensuring tailored recommendations and faster onboarding.\n\n## Key AI Capabilities\nΓÇó Natural Language Processing for client input analysis\nΓÇó Risk profiling and scoring\nΓÇó AI-driven portfolio optimization\nΓÇó Automated report generation\nΓÇó Recommendation engine\n\n## User Journey Flow\n1. User logs into the platform\n2. User fills out a form detailing financial goals, risk tolerance, and investment preferences\n3. AI analyzes inputs and generates a risk profile\n4. System automatically creates a recommended investment portfolio\n5. User reviews portfolio details and simulated performance dashboard\n6. User downloads or exports the report\n7. User provides feedback or requests adjustments\n\n## Application Requirements\n\n### Multi-Step Interface Design:\n1. **Input Section**: \n   - Document upload area with drag-and-drop functionality\n   - Text input forms for parameters and customization\n   - File type validation and progress indicators\n   - Parameter controls for AI processing options\n\n2. **Processing View**: \n   - Real-time loading states with progress bars\n   - Step-by-step progress indicators showing AI analysis phases\n   - Estimated time remaining and processing status\n   - Cancel/pause processing options\n\n3. **Results Dashboard**: \n   - Generated content display with syntax highlighting\n   - Confidence scores and quality metrics (85-98%)\n   - Side-by-side comparison with original content\n   - Interactive editing tools and refinement options\n\n4. **Export & Actions**: \n   - Multiple download formats (PDF, Word, JSON)\n   - Sharing features with collaboration tools\n   - Save to workspace functionality\n   - Refinement and regeneration controls\n\n### Design Requirements:\n- Use Tailwind CSS with professional financial services color palette:\n  - Primary: Navy blue (#1e3a8a), Deep blue (#1e40af)\n  - Secondary: Light gray (#f8fafc), Medium gray (#64748b)\n  - Accent: Green (#059669) for success, Orange (#ea580c) for warnings\n- Responsive design optimized for desktop (1440px+) and tablet (768px+)\n- WCAG 2.1 AA accessibility compliance with proper ARIA labels\n- Professional typography using Inter or similar sans-serif fonts\n- Smooth transitions and micro-interactions for enhanced UX\n- Loading skeletons and optimistic UI updates\n\n### Sample Data Integration:\n**Input Examples:**\nΓÇó Sample client profile with age, income, goals, risk tolerance\nΓÇó Investment preferences (e.g., ESG, sector focus)\n\n**Output Examples:**\nΓÇó Generated portfolio allocation table\nΓÇó Performance simulation chart\nΓÇó Risk profile summary\n\n### Realistic AI Simulation:\n- Mock processing times: 2-5 seconds with realistic progress\n- Confidence scores: 85-98% with detailed breakdowns\n- Progress indicators showing: \"Analyzing content...\", \"Generating output...\", \"Finalizing results...\"\n- Professional financial services content examples with industry terminology\n\n### Required Components:\nΓÇó form\nΓÇó dashboard\nΓÇó chart\nΓÇó table\nΓÇó export button\n\n### User Interactions:\nΓÇó form submission\nΓÇó view dashboard\nΓÇó download report\nΓÇó request adjustment\n\n### Success Metrics Display:\nΓÇó Time to generate portfolio\nΓÇó Accuracy of risk profiling\nΓÇó User satisfaction score\nΓÇó Portfolio performance simulation accuracy\n\nCreate a production-ready enterprise AI application with polished UX that demonstrates clear business value and ROI for financial services organizations.\n\nThe application should feel like a real SaaS product that financial professionals would use daily, with enterprise-grade performance, security considerations, and professional branding.\n"
+      }
+    ],
+    "stream": false,
+    "max_completion_tokens": 4000
+  }
+}
+2025-09-17T01:23:53.889Z INFO [V0Client] V0 api_response
+Metadata: {
+  "timestamp": "2025-09-17T01:23:53.887Z",
+  "operation": "api_response",
+  "response": {
+    "status": 200,
+    "hasContent": true,
+    "contentLength": 6150,
+    "model": "v0-1.5-lg"
+  },
+  "duration": 41300
+}
+2025-09-17T01:23:53.896Z INFO [V0DemoBuilder][generateDemo] Demo generation completed
+Metadata: {
+  "useCase": "Automated Investment Portfolio Generation",
+  "success": true,
+  "duration": 41322
+}
+2025-09-17T01:23:53.898Z INFO [DocsToDemo][executeWorkflow] Docs-to-demo workflow completed
+Metadata: {
+  "success": true,
+  "totalDuration": 45505,
+  "pdfFileName": "Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF",
+  "useCaseTitle": "Automated Investment Portfolio Generation",
+  "category": "Content Generation",
+  "stagesCompleted": 5
+}
+≡ƒôè Workflow Results:
+==================
+Γ£à Overall Success: YES
+ΓÅ▒∩╕Å  Total Duration: 45509ms
+≡ƒôä PDF File: Financial Services Capital Markets Hero AI Use Cases - Customer Presentation Deck.PDF
+≡ƒô¥ Use Case: Automated Investment Portfolio Generation
+≡ƒÅ╖∩╕Å  Category: Content Generation
+
+≡ƒôï Stage Results:
+=================
+Γ£à docsScanning: SUCCESS
+Γ£à pdfExtraction: SUCCESS
+Γ£à useCaseExtraction: SUCCESS
+Γ£à promptGeneration: SUCCESS
+Γ£à demoGeneration: SUCCESS
+
+≡ƒÄ¿ Demo Generation:
+==================
+Provider: v0-model-api
+Has Code: true
+Has URL: false
+Enhanced: true
+\n≡ƒôä Log Files:
+Application: logs/application.log
+V0 Interactions: demoapp.log
