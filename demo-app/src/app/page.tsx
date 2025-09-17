@@ -1,7 +1,9 @@
-import AutomatedInvestmentPortfolioGenerator from "@/components/AutomatedInvestmentPortfolioGenerator";
+import AutomatedInvestmentPortfolioGenerator from '@/components/AutomatedInvestmentPortfolioGenerator';
 
 export default function Home() {
   return (
-    <AutomatedInvestmentPortfolioGenerator />
+    <div className="min-h-screen">
+      <AutomatedInvestmentPortfolioGenerator />
+    </div>
   );
 }

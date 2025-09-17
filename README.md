@@ -38,7 +38,21 @@ npm run dev
 
 **🎯 Demo URL**: http://localhost:3000
 
-### **Option 2: Full Workflow (Generate New Demo)**
+### **Option 2: AI Use Case Generator (NEW)**
+```bash
+# Navigate to the AI Use Case Generator
+cd aiusecasegen
+
+# Install dependencies
+npm install
+
+# Start the application
+npm run dev
+```
+
+**🎯 AI Use Case Generator URL**: http://localhost:3000
+
+### **Option 3: Full Workflow (Generate New Demo)**
 ```bash
 # Clone the repository
 git clone https://github.com/rajesh-ms/hackathon-solplay-demogen.git
@@ -66,19 +80,42 @@ npm run docs-to-demo
 - **📈 Local Development**: Next.js 15.5.3 with TypeScript and Tailwind CSS
 
 ### **Generated Demo Features**
-The **Automated Investment Portfolio Generator** includes:
 
-#### 🔄 **Multi-Step Workflow**
+#### **Demo App: Automated Investment Portfolio Generator** 
+The main demo includes:
+
+##### 🔄 **Multi-Step Workflow**
 1. **Client Input Form**: Professional financial information intake
 2. **AI Processing**: Realistic processing simulation with progress indicators
 3. **Results Dashboard**: Interactive portfolio visualization and analytics
 
-#### 📊 **Interactive Components**
+##### 📊 **Interactive Components**
 - **Risk Profile Analysis**: AI-powered risk assessment with confidence scores
 - **Portfolio Allocation**: Interactive pie charts showing asset distribution
 - **Growth Projections**: Line charts with conservative/moderate/aggressive scenarios
 - **Performance Metrics**: Expected returns, volatility, Sharpe ratio
 - **Export Functionality**: Professional report generation
+
+#### **NEW: AI Use Case Generator Application**
+Comprehensive PDF analysis tool for Financial Services:
+
+##### 🔄 **Document Processing Workflow**
+1. **Drag & Drop Upload**: Professional PDF upload interface with validation
+2. **AI Analysis Progress**: 8-step processing with real-time progress tracking
+3. **Results Dashboard**: Executive summary with comprehensive use case breakdown
+
+##### 📊 **AI-Powered Analysis Features**
+- **Use Case Extraction**: Identifies 12+ AI use cases across 3 categories
+- **Business Value Analysis**: ROI estimates (250-900%), time-to-value, and priority ranking
+- **Technical Requirements**: Detailed implementation roadmaps and technology stacks
+- **Category Classification**: Content Generation, Process Automation, Personalized Experience
+- **Market Impact Assessment**: Strategic positioning and competitive advantage analysis
+
+##### 🎯 **Professional Results Display**
+- **Executive Dashboard**: High-level metrics with 97% AI confidence scores
+- **Category Distribution**: Visual breakdown of use case types with icons
+- **Detailed Use Cases**: Expandable cards with complete implementation details
+- **Export Functionality**: Generate comprehensive reports and prototypes
 
 #### 🎨 **Professional Design**
 - **Enterprise UI**: Financial services design with shadcn/ui components
@@ -101,6 +138,18 @@ hackathon-solplay-demogen/
 │   │       └── ui/                    # shadcn/ui component library
 │   ├── package.json                   # Next.js dependencies
 │   └── tsconfig.json                  # TypeScript configuration
+├── aiusecasegen/                       # 🆕 AI USE CASE GENERATOR APPLICATION
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── api/
+│   │   │   │   └── analyze-pdf/       # PDF processing API endpoint
+│   │   │   ├── page.tsx               # Main application page
+│   │   │   └── layout.tsx             # App layout
+│   │   └── components/
+│   │       ├── AIUseCaseAnalyzer.tsx  # 950+ line comprehensive UI component
+│   │       └── ui/                    # shadcn/ui components (Stone theme)
+│   ├── package.json                   # Dependencies with Lucide React & Recharts
+│   └── README.md                      # Detailed application documentation
 ├── phase1/backend/                     # 🔧 WORKFLOW IMPLEMENTATION
 │   ├── src/
 │   │   ├── services/
