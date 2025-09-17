@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { 
   Upload, 
   FileText, 
@@ -18,9 +20,10 @@ import {
   Users,
   Zap,
   Target,
-  BarChart3,
   PieChart,
-  ArrowRight
+  Star,
+  Clock,
+  Lightbulb
 } from 'lucide-react';
 
 interface UseCaseCapability {
@@ -31,6 +34,12 @@ interface UseCaseCapability {
   businessValue: string;
   technicalRequirements: string[];
   keyFeatures: string[];
+  keyCapabilities: {
+    primary: string[];
+    secondary: string[];
+    advanced: string[];
+  };
+  capabilityDescription: string;
   implementationComplexity: 'Low' | 'Medium' | 'High';
   estimatedROI: string;
   timeToValue: string;
@@ -412,103 +421,407 @@ const AIUseCaseAnalyzer = () => {
               </CardContent>
             </Card>
 
-            {/* Use Cases List */}
+            {/* Use Cases Tabbed Interface */}
             <div className="space-y-6">
               <h2 className="text-3xl font-bold text-gray-900 flex items-center space-x-3">
                 <Target className="h-8 w-8 text-blue-600" />
-                <span>Identified AI Use Cases & Implementation Roadmap</span>
+                <span>AI Use Cases & Implementation Roadmap</span>
               </h2>
               
-              {analysisResult.useCases.map((useCase) => (
-                <Card key={useCase.id} className="shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-blue-300">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
-                        <div className={`p-3 rounded-xl border-2 ${getCategoryColor(useCase.category)}`}>
-                          {getCategoryIcon(useCase.category)}
-                        </div>
-                        <div className="flex-1">
-                          <CardTitle className="text-2xl text-gray-900">{useCase.title}</CardTitle>
-                          <div className="flex items-center space-x-4 mt-3">
-                            <span className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${getCategoryColor(useCase.category)}`}>
-                              {useCase.category}
-                            </span>
-                            <span className={`px-4 py-2 rounded-full text-sm font-medium ${getComplexityColor(useCase.implementationComplexity)}`}>
-                              {useCase.implementationComplexity} Complexity
-                            </span>
-                            <span className={`px-4 py-2 rounded-full text-sm font-medium ${getPriorityColor(useCase.priority)}`}>
-                              {useCase.priority} Priority
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-green-600">{useCase.estimatedROI}</div>
-                        <div className="text-sm text-gray-500 font-medium">Estimated ROI</div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6 pt-0">
-                    <p className="text-gray-700 text-lg leading-relaxed">{useCase.description}</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900 flex items-center text-lg">
-                          <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
-                          Business Value
-                        </h4>
-                        <p className="text-gray-600">{useCase.businessValue}</p>
-                      </div>
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-900 flex items-center text-lg">
-                          <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
-                          Time to Value
-                        </h4>
-                        <p className="text-gray-600">{useCase.timeToValue}</p>
-                      </div>
-                    </div>
+              <Tabs defaultValue="content-generation" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-100 p-1 rounded-xl">
+                  <TabsTrigger 
+                    value="content-generation" 
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all duration-200"
+                  >
+                    <FileText className="h-5 w-5 mr-2" />
+                    Content Generation ({analysisResult.summary.contentGeneration})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="process-automation"
+                    className="data-[state=active]:bg-green-600 data-[state=active]:text-white transition-all duration-200"
+                  >
+                    <Zap className="h-5 w-5 mr-2" />
+                    Process Automation ({analysisResult.summary.processAutomation})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="personalized-experience"
+                    className="data-[state=active]:bg-purple-600 data-[state=active]:text-white transition-all duration-200"
+                  >
+                    <Users className="h-5 w-5 mr-2" />
+                    Personalized Experience ({analysisResult.summary.personalizedExperience})
+                  </TabsTrigger>
+                </TabsList>
 
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-900 text-lg">Market Impact</h4>
-                      <p className="text-gray-600">{useCase.marketImpact}</p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-900 text-lg">Key Capabilities</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {useCase.keyFeatures.map((feature, idx) => (
-                          <span key={idx} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-900 text-lg">Technical Requirements</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {useCase.technicalRequirements.map((req, idx) => (
-                          <span key={idx} className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium border border-blue-200">
-                            {req}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-end space-x-3 pt-6 border-t border-gray-100">
-                      <Button variant="outline" size="lg">
-                        <Eye className="h-5 w-5 mr-2" />
-                        View Implementation Plan
-                      </Button>
-                      <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Generate Prototype
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                <TabsContent value="content-generation" className="space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {analysisResult.useCases
+                      .filter(useCase => useCase.category === 'Content Generation')
+                      .map((useCase) => (
+                        <Card key={useCase.id} className="shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-blue-300 h-fit">
+                          <CardHeader className="pb-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start space-x-3">
+                                <div className={`p-2 rounded-lg border-2 ${getCategoryColor(useCase.category)}`}>
+                                  {getCategoryIcon(useCase.category)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <CardTitle className="text-lg text-gray-900 leading-tight">{useCase.title}</CardTitle>
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    <Badge className={`${getComplexityColor(useCase.implementationComplexity)} border-0`}>
+                                      {useCase.implementationComplexity}
+                                    </Badge>
+                                    <Badge className={`${getPriorityColor(useCase.priority)} border-0`}>
+                                      {useCase.priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xl font-bold text-green-600">{useCase.estimatedROI}</div>
+                                <div className="text-xs text-gray-500 font-medium">ROI</div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4 pt-0">
+                            <p className="text-gray-700 text-sm leading-relaxed">{useCase.description}</p>
+                            
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                  <TrendingUp className="h-4 w-4 mr-1 text-green-600" />
+                                  Business Value
+                                </h4>
+                                <p className="text-gray-600 text-sm">{useCase.businessValue}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                  <Clock className="h-4 w-4 mr-1 text-blue-600" />
+                                  Time to Value: {useCase.timeToValue}
+                                </h4>
+                              </div>
+                            </div>
+
+                            {/* Key Capabilities Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                <Lightbulb className="h-4 w-4 mr-1 text-yellow-600" />
+                                Key Capabilities
+                              </h4>
+                              <p className="text-gray-700 text-sm leading-relaxed">{useCase.capabilityDescription}</p>
+                              
+                              <div className="space-y-2">
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs flex items-center">
+                                    <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                                    Primary Capabilities
+                                  </h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.primary.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-blue-100 text-blue-800 text-xs hover:bg-blue-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs">Secondary Capabilities</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.secondary.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-gray-100 text-gray-700 text-xs hover:bg-gray-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs">Advanced Capabilities</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.advanced.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-purple-100 text-purple-800 text-xs hover:bg-purple-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-gray-900 text-sm">Technical Requirements</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {useCase.technicalRequirements.map((req, idx) => (
+                                  <Badge key={idx} className="bg-blue-50 text-blue-700 text-xs border border-blue-200 hover:bg-blue-100">
+                                    {req}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between pt-4 border-t border-gray-100">
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Plan
+                              </Button>
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                <Sparkles className="h-4 w-4 mr-1" />
+                                Generate
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="process-automation" className="space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {analysisResult.useCases
+                      .filter(useCase => useCase.category === 'Process Automation')
+                      .map((useCase) => (
+                        <Card key={useCase.id} className="shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-green-300 h-fit">
+                          <CardHeader className="pb-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start space-x-3">
+                                <div className={`p-2 rounded-lg border-2 ${getCategoryColor(useCase.category)}`}>
+                                  {getCategoryIcon(useCase.category)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <CardTitle className="text-lg text-gray-900 leading-tight">{useCase.title}</CardTitle>
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    <Badge className={`${getComplexityColor(useCase.implementationComplexity)} border-0`}>
+                                      {useCase.implementationComplexity}
+                                    </Badge>
+                                    <Badge className={`${getPriorityColor(useCase.priority)} border-0`}>
+                                      {useCase.priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xl font-bold text-green-600">{useCase.estimatedROI}</div>
+                                <div className="text-xs text-gray-500 font-medium">ROI</div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4 pt-0">
+                            <p className="text-gray-700 text-sm leading-relaxed">{useCase.description}</p>
+                            
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                  <TrendingUp className="h-4 w-4 mr-1 text-green-600" />
+                                  Business Value
+                                </h4>
+                                <p className="text-gray-600 text-sm">{useCase.businessValue}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                  <Clock className="h-4 w-4 mr-1 text-blue-600" />
+                                  Time to Value: {useCase.timeToValue}
+                                </h4>
+                              </div>
+                            </div>
+
+                            {/* Key Capabilities Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                <Lightbulb className="h-4 w-4 mr-1 text-yellow-600" />
+                                Key Capabilities
+                              </h4>
+                              <p className="text-gray-700 text-sm leading-relaxed">{useCase.capabilityDescription}</p>
+                              
+                              <div className="space-y-2">
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs flex items-center">
+                                    <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                                    Primary Capabilities
+                                  </h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.primary.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-green-100 text-green-800 text-xs hover:bg-green-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs">Secondary Capabilities</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.secondary.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-gray-100 text-gray-700 text-xs hover:bg-gray-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs">Advanced Capabilities</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.advanced.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-purple-100 text-purple-800 text-xs hover:bg-purple-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-gray-900 text-sm">Technical Requirements</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {useCase.technicalRequirements.map((req, idx) => (
+                                  <Badge key={idx} className="bg-green-50 text-green-700 text-xs border border-green-200 hover:bg-green-100">
+                                    {req}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between pt-4 border-t border-gray-100">
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Plan
+                              </Button>
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                <Sparkles className="h-4 w-4 mr-1" />
+                                Generate
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="personalized-experience" className="space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {analysisResult.useCases
+                      .filter(useCase => useCase.category === 'Personalized Experience')
+                      .map((useCase) => (
+                        <Card key={useCase.id} className="shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-purple-300 h-fit">
+                          <CardHeader className="pb-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start space-x-3">
+                                <div className={`p-2 rounded-lg border-2 ${getCategoryColor(useCase.category)}`}>
+                                  {getCategoryIcon(useCase.category)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <CardTitle className="text-lg text-gray-900 leading-tight">{useCase.title}</CardTitle>
+                                  <div className="flex items-center space-x-2 mt-2">
+                                    <Badge className={`${getComplexityColor(useCase.implementationComplexity)} border-0`}>
+                                      {useCase.implementationComplexity}
+                                    </Badge>
+                                    <Badge className={`${getPriorityColor(useCase.priority)} border-0`}>
+                                      {useCase.priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xl font-bold text-green-600">{useCase.estimatedROI}</div>
+                                <div className="text-xs text-gray-500 font-medium">ROI</div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4 pt-0">
+                            <p className="text-gray-700 text-sm leading-relaxed">{useCase.description}</p>
+                            
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                  <TrendingUp className="h-4 w-4 mr-1 text-green-600" />
+                                  Business Value
+                                </h4>
+                                <p className="text-gray-600 text-sm">{useCase.businessValue}</p>
+                              </div>
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                  <Clock className="h-4 w-4 mr-1 text-blue-600" />
+                                  Time to Value: {useCase.timeToValue}
+                                </h4>
+                              </div>
+                            </div>
+
+                            {/* Key Capabilities Section */}
+                            <div className="space-y-3">
+                              <h4 className="font-semibold text-gray-900 flex items-center text-sm">
+                                <Lightbulb className="h-4 w-4 mr-1 text-yellow-600" />
+                                Key Capabilities
+                              </h4>
+                              <p className="text-gray-700 text-sm leading-relaxed">{useCase.capabilityDescription}</p>
+                              
+                              <div className="space-y-2">
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs flex items-center">
+                                    <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                                    Primary Capabilities
+                                  </h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.primary.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-purple-100 text-purple-800 text-xs hover:bg-purple-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs">Secondary Capabilities</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.secondary.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-gray-100 text-gray-700 text-xs hover:bg-gray-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <h5 className="font-medium text-gray-800 text-xs">Advanced Capabilities</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {useCase.keyCapabilities.advanced.map((cap, idx) => (
+                                      <Badge key={idx} className="bg-indigo-100 text-indigo-800 text-xs hover:bg-indigo-200 border-0">
+                                        {cap}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-gray-900 text-sm">Technical Requirements</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {useCase.technicalRequirements.map((req, idx) => (
+                                  <Badge key={idx} className="bg-purple-50 text-purple-700 text-xs border border-purple-200 hover:bg-purple-100">
+                                    {req}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between pt-4 border-t border-gray-100">
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Plan
+                              </Button>
+                              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                                <Sparkles className="h-4 w-4 mr-1" />
+                                Generate
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         )}
