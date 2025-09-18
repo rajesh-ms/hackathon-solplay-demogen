@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { 
   Upload, 
   FileText, 
@@ -69,6 +70,7 @@ const AIUseCaseAnalyzer = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [temperature, setTemperature] = useState<number[]>([0.7]); // Default temperature 0.7
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,10 +87,10 @@ const AIUseCaseAnalyzer = () => {
 
     setSelectedFile(file);
     setError(null);
-    await analyzePDF(file);
-  }, []);
+    await analyzePDF(file, temperature[0]);
+  }, [temperature]);
 
-  const analyzePDF = async (file: File) => {
+  const analyzePDF = async (file: File, temperature: number = 0.7) => {
     setIsAnalyzing(true);
     setProgress(0);
     setError(null);
@@ -97,6 +99,7 @@ const AIUseCaseAnalyzer = () => {
       // Create form data for file upload
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('temperature', temperature.toString());
 
       // Simulate realistic AI processing steps with visual feedback
       const steps = [
@@ -128,11 +131,23 @@ const AIUseCaseAnalyzer = () => {
       const response = await apiPromise;
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to analyze PDF');
+        let errorMessage = 'Failed to analyze PDF';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response is not JSON (e.g., HTML error page), use status text
+          errorMessage = `HTTP ${response.status}: ${response.statusText || 'Server Error'}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error('Invalid response format from server');
+      }
       
       if (!result.success) {
         throw new Error(result.error || 'Analysis failed');
@@ -273,20 +288,56 @@ const AIUseCaseAnalyzer = () => {
                 </p>
                 
                 {selectedFile && !isAnalyzing && (
-                  <div className="mt-6 p-6 bg-gray-50 rounded-xl">
+                  <div className="mt-6 p-6 bg-gray-50 rounded-xl space-y-6">
                     <p className="text-gray-600 mb-4">
                       Selected: <strong>{selectedFile.name}</strong> ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
                     </p>
+                    
+                    {/* Temperature Slider Control */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">
+                          AI Temperature: {temperature[0].toFixed(1)}
+                        </label>
+                        <div className="text-xs text-gray-500 max-w-xs">
+                          {temperature[0] < 0.3 ? 'Conservative & Focused' : 
+                           temperature[0] < 0.7 ? 'Balanced Analysis' : 
+                           'Creative & Exploratory'}
+                        </div>
+                      </div>
+                      <div className="px-3">
+                        <Slider
+                          value={temperature}
+                          onValueChange={setTemperature}
+                          max={1.0}
+                          min={0.1}
+                          step={0.1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 mt-1">
+                          <span>0.1 - Precise</span>
+                          <span>0.5 - Balanced</span>
+                          <span>1.0 - Creative</span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <strong>Temperature Guide:</strong><br/>
+                        • <strong>0.1-0.3:</strong> Conservative analysis, focuses on obvious use cases<br/>
+                        • <strong>0.4-0.7:</strong> Balanced approach, good mix of practical and innovative ideas<br/>
+                        • <strong>0.8-1.0:</strong> Creative exploration, discovers unexpected AI opportunities
+                      </div>
+                    </div>
+                    
                     <Button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        analyzePDF(selectedFile);
+                        analyzePDF(selectedFile, temperature[0]);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
+                      className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3 w-full"
                       size="lg"
                     >
                       <Sparkles className="h-5 w-5 mr-2" />
-                      Analyze with AI
+                      Analyze with AI (Temperature: {temperature[0].toFixed(1)})
                     </Button>
                   </div>
                 )}

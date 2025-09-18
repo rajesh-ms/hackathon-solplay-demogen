@@ -9,6 +9,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+env.zip
 
 # API keys and sensitive configuration
 **/config/secrets.json
