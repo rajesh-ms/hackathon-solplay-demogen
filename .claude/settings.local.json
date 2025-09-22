@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(tasklist)",
+      "Bash(findstr:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run lint)",
+      "Bash(set PORT=3002)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

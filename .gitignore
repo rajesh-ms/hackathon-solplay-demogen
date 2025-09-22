@@ -6,6 +6,8 @@ yarn-error.log*
 
 # Environment files - Keep .env as template, ignore .env.local with secrets
 .env.local
+.env
+api-demogen/.env
 .env.development.local
 .env.test.local
 .env.production.local

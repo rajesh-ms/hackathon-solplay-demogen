@@ -1,0 +1,51 @@
+# Azure Developer CLI configuration file for AI Use Case Generator
+name: aiusecasegen
+metadata:
+  template: aiusecasegen-nextjs@0.0.1-beta
+
+# Infrastructure definition
+infra:
+  provider: bicep
+  path: infra
+
+# Services to deploy
+services:
+  aiusecasegen:
+    project: ./aiusecasegen
+    dist: ./aiusecasegen/.next
+    language: js
+    host: appservice
+
+# Hooks for deployment pipeline
+hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: echo "Preparing for Azure resource provisioning..."
+    windows:
+      shell: pwsh
+      run: Write-Host "Preparing for Azure resource provisioning..."
+  
+  prepackage:
+    posix:
+      shell: sh
+      run: |
+        echo "Building Next.js application..."
+        cd aiusecasegen
+        npm ci
+        npm run build
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Building Next.js application..."
+        Set-Location aiusecasegen
+        npm ci
+        npm run build
+
+  postdeploy:
+    posix:
+      shell: sh
+      run: echo "Deployment completed! Application available at the provided URL."
+    windows:
+      shell: pwsh
+      run: Write-Host "Deployment completed! Application available at the provided URL."

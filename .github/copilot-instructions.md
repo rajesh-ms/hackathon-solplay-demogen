@@ -2,117 +2,98 @@
 
 ## Project Overview
 
-**SolPlay DemoGen** is an intelligent platform that automatically reads Financial Services solution play PDFs from the `docs/` folder, extracts the first viable use case using Azure OpenAI, and generates interactive, professional demos using the v0.dev SDK. This project implements ARIA v4's 8-role AI development framework with a hybrid AI provider architecture.
+**SolPlay DemoGen** is an intelligent platform that accepts use case data directly via API and generates interactive, appealing demos using the v0.dev SDK. This project implements ARIA v4's 8-role AI development framework with a focus on demo generation from structured input.
 
 ## Key Architecture
 
-### Hybrid AI Provider System
-- **Azure OpenAI**: PDF content analysis and use case extraction 
+### Direct Input System
+- **API Input**: Accept use case title, key capabilities, and other structured data directly
 - **v0.dev SDK**: React component generation and UI creation
-- **Provider Abstraction**: Seamless switching between AI providers via `AI_PROVIDER` env var
+- **Demo Generation**: Transform use case data into compelling visual demonstrations
 
 ### Core Components
-- **PDFProcessor** (`phase1/backend/src/pdf-parser.ts`): Extract text from solution play PDFs using PyMuPDF (MuPDF)
-- **AIProcessor** (`phase1/backend/src/ai-processor.ts`): Use Azure OpenAI for content analysis  
-- **UseCaseExtractor**: Identify first viable use case from PDF content
-- **V0Client** (`phase1/backend/src/v0-client.ts`): Generate React components via v0.dev API
-- **DemoBuilder** (`phase1/backend/src/demo-builder.ts`): Assemble complete demo applications
+- **InputValidator** (`api-demogen/src/validators/input-validator.ts`): Validate incoming use case data
+- **V0PromptGenerator** (`api-demogen/src/services/v0-prompt-generator.ts`): Generate v0 prompts from use case data
+- **V0Client** (`api-demogen/src/services/v0-client.ts`): Generate React components via v0.dev API
+- **SyntheticDataGenerator** (`api-demogen/src/services/synthetic-data-generator.ts`): Create demo data
+- **DemoBuilder** (`api-demogen/src/services/demo-builder.ts`): Assemble complete demo applications
 
-## Critical Workflow: Docs Folder to Demo Generation
+## Critical Workflow: Direct Input to Demo Generation
 
-### Phase 1: PDF Auto-Discovery and Reading
+### Phase 1: API Input Validation and Processing
 ```typescript
-// Implementation in phase1/backend/src/services/docs-processor.ts
-export class DocsProcessor {
-  async scanDocsFolder(): Promise<string[]> {
-    const docsPath = path.join(process.cwd(), 'docs');
-    const files = await fs.readdir(docsPath);
-    return files.filter(file => file.toLowerCase().endsWith('.pdf'));
+// Implementation in api-demogen/src/services/input-processor.ts
+export class InputProcessor {
+  async validateUseCaseInput(input: any): Promise<UseCaseData> {
+    const schema = Joi.object({
+      useCaseTitle: Joi.string().min(3).max(200).required(),
+      keyCapabilities: Joi.array().items(Joi.string().min(2).max(100)).min(1).max(10).required(),
+      description: Joi.string().max(500).optional(),
+      category: Joi.string().valid('Content Generation', 'Process Automation', 'Personalized Experience').optional(),
+      targetAudience: Joi.string().max(100).optional(),
+      industryVertical: Joi.string().max(50).optional()
+    });
+
+    const { error, value } = schema.validate(input);
+    if (error) {
+      throw new ValidationError(`Invalid input: ${error.details[0].message}`);
+    }
+
+    return this.enrichUseCaseData(value);
   }
 
-  async readFirstPDF(): Promise<{filePath: string, content: string}> {
-    const pdfFiles = await this.scanDocsFolder();
-    if (pdfFiles.length === 0) throw new Error('No PDF files found in docs folder');
-    
-    const firstPDF = pdfFiles[0]; // Pick first PDF alphabetically
-    const filePath = path.join(process.cwd(), 'docs', firstPDF);
-    const content = await this.pdfParser.extractText(filePath);
-    
-    return { filePath, content };
+  private enrichUseCaseData(input: any): UseCaseData {
+    // Enrich basic input with demo-specific data structure
+    return {
+      title: input.useCaseTitle,
+      category: input.category || this.inferCategory(input.keyCapabilities),
+      description: input.description || `${input.useCaseTitle} demonstrating ${input.keyCapabilities.join(', ')}`,
+      capabilities: input.keyCapabilities,
+      userJourney: this.generateUserJourney(input.keyCapabilities),
+      successMetrics: this.generateSuccessMetrics(input.category),
+      demoFeatures: this.inferDemoFeatures(input.keyCapabilities),
+      sampleData: this.generateSampleData(input.keyCapabilities)
+    };
   }
 }
 ```
 
-### Phase 2: Use Case Extraction with Azure OpenAI
+### Phase 2: Use Case Enhancement and Enrichment
 ```typescript
-// Implementation in phase1/backend/src/services/usecase-extractor.ts
-export class UseCaseExtractor {
-  private azureOpenAI: OpenAI;
+// Implementation in api-demogen/src/services/usecase-enricher.ts
+export class UseCaseEnricher {
+  async enrichUseCase(basicInput: UseCaseInput): Promise<UseCaseData> {
+    // Generate comprehensive use case data from basic input
+    const enrichedData: UseCaseData = {
+      title: basicInput.useCaseTitle,
+      category: basicInput.category || this.inferCategory(basicInput.keyCapabilities),
+      description: basicInput.description || this.generateDescription(basicInput),
+      capabilities: basicInput.keyCapabilities,
+      userJourney: this.generateUserJourney(basicInput),
+      successMetrics: this.generateSuccessMetrics(basicInput),
+      demoFeatures: this.generateDemoFeatures(basicInput),
+      sampleData: this.generateSampleData(basicInput)
+    };
 
-  constructor() {
-    this.azureOpenAI = new OpenAI({
-      apiKey: process.env.AZURE_OPENAI_API_KEY,
-      baseURL: process.env.AZURE_OPENAI_ENDPOINT,
-      defaultQuery: { 'api-version': '2024-02-15-preview' }
-    });
+    return enrichedData;
   }
 
-  async extractFirstUseCase(pdfContent: string): Promise<UseCaseData> {
-    const prompt = `
-Analyze this Financial Services PDF and extract the FIRST complete use case suitable for demo generation.
+  private inferCategory(capabilities: string[]): string {
+    const contentWords = ['generate', 'create', 'write', 'content', 'document'];
+    const automationWords = ['automate', 'process', 'workflow', 'approve', 'analyze'];
+    const personalizationWords = ['personalize', 'recommend', 'tailor', 'customize', 'profile'];
 
-PDF Content: ${pdfContent.substring(0, 6000)}
-
-Extract the FIRST viable use case with these details:
-1. **Title**: Clear, descriptive name
-2. **Category**: One of: Content Generation, Process Automation, Personalized Experience
-3. **Description**: What business problem it solves (2-3 sentences)
-4. **Key Capabilities**: List of 4-6 specific AI capabilities required
-5. **User Journey**: Step-by-step user interaction flow (5-7 steps)
-6. **Success Metrics**: How success is measured
-7. **Demo Features**: Specific UI components needed (forms, dashboards, charts, etc.)
-8. **Sample Data**: Types of synthetic data required
-
-Return JSON format optimized for v0.dev React component generation:
-{
-  "title": "Use Case Name",
-  "category": "Content Generation|Process Automation|Personalized Experience", 
-  "description": "Business problem and solution overview",
-  "capabilities": ["capability1", "capability2", "capability3", "capability4"],
-  "userJourney": ["step1", "step2", "step3", "step4", "step5"],
-  "successMetrics": ["metric1", "metric2", "metric3"],
-  "demoFeatures": {
-    "components": ["form", "dashboard", "chart", "table", "upload"],
-    "interactions": ["upload", "process", "view results", "export"],
-    "dataTypes": ["documents", "analytics", "recommendations"]
-  },
-  "sampleData": {
-    "inputs": ["example input 1", "example input 2"],
-    "outputs": ["example output 1", "example output 2"]
-  }
-}
-
-Focus on use cases that can create compelling visual demos with forms, dashboards, and results displays.
-`;
-
-    const completion = await this.azureOpenAI.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a Financial Services solution analyst. Extract the FIRST viable use case optimized for professional demo generation.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 2000
-    });
-
-    const response = completion.choices[0]?.message?.content;
-    return JSON.parse(response);
+    const capabilityText = capabilities.join(' ').toLowerCase();
+    
+    if (contentWords.some(word => capabilityText.includes(word))) {
+      return 'Content Generation';
+    } else if (automationWords.some(word => capabilityText.includes(word))) {
+      return 'Process Automation';
+    } else if (personalizationWords.some(word => capabilityText.includes(word))) {
+      return 'Personalized Experience';
+    }
+    
+    return 'Content Generation'; // Default fallback
   }
 }
 ```
@@ -147,26 +128,25 @@ Build a multi-step interface with:
 4. **Export Options**: Download buttons, sharing features, refinement controls
 
 Design Requirements:
-- Use Tailwind CSS with a professional financial services color scheme (navy blues, whites, light grays)
-- Responsive design that works on desktop and tablet
-- Accessibility compliance (WCAG 2.1 AA)
-- Professional typography and spacing
-- Interactive elements with hover states and smooth transitions
+- Use Tailwind CSS with an attractive color scheme (blues, whites, grays)
+- Basic responsive design that works on desktop and tablet
+- Clean typography and spacing
+- Interactive elements with hover states
 
 Sample Data to Include:
 - Input Examples: ${useCase.sampleData.inputs.join(', ')}
 - Output Examples: ${useCase.sampleData.outputs.join(', ')}
 
-Include realistic synthetic data that demonstrates the AI capability:
+Include sample synthetic data that demonstrates the AI capability:
 - Mock processing times (2-5 seconds)
 - Confidence scores (85-98%)
 - Progress indicators showing analysis steps
-- Professional financial services content examples
+- Demo-appropriate content examples
 
 Components Needed: ${useCase.demoFeatures.components.join(', ')}
 Interactions: ${useCase.demoFeatures.interactions.join(', ')}
 
-Make it look like a production-ready enterprise AI application with polished UX.
+Make it look like an appealing demo application with engaging UX.
 `;
   }
 
@@ -186,10 +166,10 @@ Build a workflow automation dashboard with:
 4. **Monitoring Panel**: Real-time alerts, compliance tracking, audit logs
 
 Design Requirements:
-- Enterprise dashboard aesthetic with data visualization
+- Dashboard aesthetic with data visualization
 - Use Chart.js or Recharts for analytics displays
 - Status indicators with color coding (green/yellow/red)
-- Professional card-based layout with clear hierarchy
+- Card-based layout with clear hierarchy
 
 Sample Data Integration:
 - Process Metrics: ${useCase.successMetrics.join(', ')}
@@ -249,7 +229,7 @@ Create an engaging, personalized financial experience that demonstrates AI-drive
 
 ### Phase 4: V0 SDK Integration and Demo Generation
 ```typescript
-// Implementation in phase1/backend/src/services/demo-generator.ts
+// Implementation in api-demogen/src/services/demo-generator.ts
 export class DemoGenerator {
   private v0Client: V0Client;
   private promptGenerator: V0PromptGenerator;
@@ -317,76 +297,66 @@ export class DemoGenerator {
 
 ### Required Environment Variables
 ```bash
-# Azure OpenAI Configuration (for PDF analysis)
-AZURE_OPENAI_API_KEY=your_azure_openai_key
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
-
 # v0.dev Configuration (for demo generation)
 V0_API_KEY=your_v0_api_key
 V0_BASE_URL=https://v0.dev/api
 
 # Provider Configuration
-AI_PROVIDER=hybrid  # Uses Azure OpenAI for analysis, v0 for generation
-USE_CASE_EXTRACTION_PROVIDER=azure-openai
+AI_PROVIDER=v0  # Uses v0 for demo generation
 DEMO_GENERATION_PROVIDER=v0
 ```
 
 ## Development Workflow
 
-### 1. Run Complete Workflow
+### 1. Run API Server
 ```bash
-cd phase1/backend
-npm run generate-demo-from-docs
+cd api-demogen
+npm run dev
 ```
 
-### 2. Individual Steps
+### 2. Test API with Sample Data
 ```bash
-# Step 1: Scan docs folder
-npm run scan-docs
-
-# Step 2: Extract use case from first PDF
-npm run extract-usecase
-
-# Step 3: Generate v0 prompt
-npm run generate-prompt
-
-# Step 4: Create demo with v0
-npm run generate-demo
+# Test with sample use case data
+curl -X POST http://localhost:3000/api/v1/generate-demo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "useCaseTitle": "AI-Powered Customer Support",
+    "keyCapabilities": ["Natural language processing", "Automated ticket routing", "Sentiment analysis", "Response generation"],
+    "category": "Process Automation",
+    "description": "Automate customer support workflows using AI"
+  }'
 ```
 
-### 3. Test with Mock Data
+### 3. Monitor Demo Generation
 ```bash
-# Use mock providers for development
-export AI_PROVIDER=mock
-npm run generate-demo-mock
+# Check status
+curl http://localhost:3000/api/v1/demo-status/{demoId}
+
+# View generated demo
+curl http://localhost:3000/api/v1/demos/{demoId}
 ```
 
 ## Quality Standards
 
 ### Generated Demo Requirements
-- **Professional UI**: Enterprise-grade financial services design
-- **Responsive**: Works on desktop, tablet, and mobile
-- **Accessible**: WCAG 2.1 AA compliance
-- **Interactive**: Realistic user interactions and feedback
+- **Appealing UI**: Attractive design suitable for demonstrations
+- **Responsive**: Works on desktop and tablet
+- **Interactive**: Engaging user interactions and feedback
 - **Data-Rich**: Compelling synthetic data that tells a story
-- **Performance**: Fast loading and smooth animations
+- **Functional**: Smooth operation for demo purposes
 
 ### Code Quality
-- TypeScript strict mode enabled
-- ESLint configuration for React and Node.js
+- TypeScript for type safety
+- Basic linting for code consistency
 - Prettier formatting
-- Jest unit tests for all utilities
-- Integration tests for the complete workflow
+- Simple validation for demo functionality
 
 ## Troubleshooting
 
 ### Common Issues
-- **No PDFs Found**: Ensure PDF files exist in `docs/` folder
-- **Azure OpenAI Errors**: Verify API key and endpoint configuration
+- **Invalid Input Data**: Ensure use case title and capabilities are provided
 - **v0.dev Rate Limits**: Implement exponential backoff and queuing
-- **Use Case Extraction Fails**: PDF content may be too complex or corrupted
+- **Missing Required Fields**: Check API validation error messages
 - **Demo Generation Errors**: v0 prompt may need refinement for specific use cases
 
 ### Fallback Strategies
@@ -397,12 +367,12 @@ npm run generate-demo-mock
 
 ## Key Principles for AI Agents
 
-1. **Hybrid AI Strategy**: Use the right AI tool for each task (Azure OpenAI for analysis, v0 for generation)
-2. **Docs-First Approach**: Always start by reading the actual docs folder content
-3. **First Use Case Focus**: Extract and build demos for the first viable use case found
-4. **Professional Quality**: Generate enterprise-grade demos that could be shown to clients
+1. **Direct Input Strategy**: Accept structured use case data directly via API for immediate processing
+2. **v0 Focus**: Use v0.dev SDK as the primary tool for React component generation
+3. **Input Validation**: Ensure robust validation of incoming use case data structure
+4. **Demo Quality**: Generate appealing demos suitable for presentations and demonstrations
 5. **Synthetic Data Integration**: Include realistic, compelling data that demonstrates business value
-6. **Responsive Design**: Ensure demos work across all device types
+6. **Responsive Design**: Ensure demos work across desktop and tablet devices
 7. **Error Resilience**: Provide graceful fallbacks when services are unavailable
 
-This workflow transforms static solution play PDFs into interactive, professional demos automatically using the power of Azure OpenAI for content understanding and v0.dev for React component generation.
+This workflow transforms structured use case input into interactive, appealing demos automatically using the power of v0.dev for React component generation.

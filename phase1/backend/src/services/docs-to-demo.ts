@@ -102,7 +102,7 @@ export class DocsToDemo {
       }, 'DocsToDemo', 'executeWorkflow');
       
       const pdfContent = await this.pdfParser.extractText(firstPDF);
-      const processedText = this.pdfParser.preprocessText(pdfContent);
+      const processedText = this.pdfParser.preprocessText(pdfContent.text);
       
       result.stages.pdfExtraction = { 
         success: true, 

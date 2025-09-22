@@ -71,6 +71,45 @@ const AIUseCaseAnalyzer = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [temperature, setTemperature] = useState<number[]>([0.7]); // Default temperature 0.7
+  const [demoGeneration, setDemoGeneration] = useState<Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>>({});
+
+  // Use Next.js public env var if injected at build time, fallback to localhost
+  // Avoid direct Node 'process' typing in case types not loaded in some lint context
+  const apiBase = (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_DEMOGEN_API_BASE)
+    ? (globalThis as any).process.env.NEXT_PUBLIC_DEMOGEN_API_BASE
+    : 'http://localhost:3001/api/v1';
+
+  const triggerDemoGeneration = useCallback(async (useCase: UseCaseCapability) => {
+  setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'generating'}}));
+    try {
+      const payload = {
+        useCaseTitle: useCase.title,
+        keyCapabilities: useCase.keyCapabilities.primary.slice(0,6),
+        description: useCase.capabilityDescription || useCase.description,
+        category: useCase.category,
+        targetAudience: 'Financial Services Stakeholders',
+        industryVertical: 'Financial Services',
+        generationPreferences: { useV0: true, useAzureOpenAI: true, fallbackToBasic: true },
+        aiEnhancementOptions: { enhanceDescription: true, generateSyntheticData: true, createUserJourney: true, suggestImprovements: true }
+      };
+      const res = await fetch(`${apiBase}/generate-demo-enhanced`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        const err = await res.json().catch(()=>({error: res.statusText}));
+        throw new Error(err.message || err.error || 'Demo generation failed');
+      }
+      const data = await res.json();
+      // Use v0.dev preview URL if available, otherwise fallback to local demo page
+      const v0PreviewUrl = data.data?.demo?.v0Component?.preview;
+      const demoUrl = v0PreviewUrl || `/demo-app/${data.data.demoId}`;
+  setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'success', url: demoUrl}}));
+    } catch(e:any){
+  setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'error', error: e.message}}));
+    }
+  }, [apiBase]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -276,7 +315,7 @@ const AIUseCaseAnalyzer = () => {
                   type="file"
                   accept=".pdf"
                   className="hidden"
-                  onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                 />
                 
                 <FileText className="h-24 w-24 text-blue-400 mx-auto mb-6" />
@@ -616,10 +655,20 @@ const AIUseCaseAnalyzer = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Plan
                               </Button>
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                <Sparkles className="h-4 w-4 mr-1" />
-                                Generate
-                              </Button>
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60" 
+                                  disabled={demoGeneration[useCase.id]?.status==='generating'}
+                                  onClick={() => triggerDemoGeneration(useCase)}
+                                >
+                                  <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
+                                  {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
+                                </Button>
+                                {demoGeneration[useCase.id]?.status==='success' && (
+                                  <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">View Demo</a>
+                                )}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -739,10 +788,20 @@ const AIUseCaseAnalyzer = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Plan
                               </Button>
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                                <Sparkles className="h-4 w-4 mr-1" />
-                                Generate
-                              </Button>
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60" 
+                                  disabled={demoGeneration[useCase.id]?.status==='generating'}
+                                  onClick={() => triggerDemoGeneration(useCase)}
+                                >
+                                  <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
+                                  {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
+                                </Button>
+                                {demoGeneration[useCase.id]?.status==='success' && (
+                                  <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-700 underline">View Demo</a>
+                                )}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -862,10 +921,20 @@ const AIUseCaseAnalyzer = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Plan
                               </Button>
-                              <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                                <Sparkles className="h-4 w-4 mr-1" />
-                                Generate
-                              </Button>
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  size="sm" 
+                                  className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60" 
+                                  disabled={demoGeneration[useCase.id]?.status==='generating'}
+                                  onClick={() => triggerDemoGeneration(useCase)}
+                                >
+                                  <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
+                                  {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
+                                </Button>
+                                {demoGeneration[useCase.id]?.status==='success' && (
+                                  <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-purple-700 underline">View Demo</a>
+                                )}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -882,3 +951,12 @@ const AIUseCaseAnalyzer = () => {
 };
 
 export default AIUseCaseAnalyzer;
+
+// Fallback declaration in case TS environment fails to include React JSX typings during standalone analysis
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX { // Providing a minimal fallback prevents false-positive intrinsic element errors in tooling
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    interface IntrinsicElements { [elemName: string]: any }
+  }
+}

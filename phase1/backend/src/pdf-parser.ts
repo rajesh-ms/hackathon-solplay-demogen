@@ -43,4 +43,13 @@ export class PDFParser {
       return {};
     }
   }
+
+  // Preprocess and clean text
+  preprocessText(text: string): string {
+    return text
+      .replace(/\s+/g, ' ')         // Normalize whitespace
+      .replace(/\n+/g, '\n')        // Normalize line breaks
+      .replace(/[^\x20-\x7E\n]/g, '') // Remove non-printable characters
+      .trim();
+  }
 }
