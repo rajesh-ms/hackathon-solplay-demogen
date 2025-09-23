@@ -35,12 +35,16 @@ export class HybridDemoService {
   private logger: winston.Logger;
   private storage: DemoStorageService;
   private demos: Map<string, EnhancedDemoResponse> = new Map();
+  private localDeployer: any;
 
   constructor(logger: winston.Logger) {
     this.logger = logger;
     this.azureOpenAI = new AzureOpenAIService(logger);
     this.v0Client = new V0ClientService(logger);
     this.storage = new DemoStorageService(logger);
+    // Enable local demo deployment
+    const { LocalDemoDeployer } = require('./local-demo-deployer');
+    this.localDeployer = new LocalDemoDeployer();
   }
 
   async initialize(): Promise<void> {
@@ -219,6 +223,42 @@ export class HybridDemoService {
         demoScript: enhancedUseCase?.businessNarrative?.executiveSummary || '',
         metadata
       };
+
+      // Deploy React demo locally and get live URL
+      let liveDemoUrl: string | undefined = undefined;
+      try {
+        if (v0Component?.componentId) {
+          this.logger.info('Starting local demo deployment', { demoId, componentId: v0Component.componentId });
+          
+          // Get code from v0 component or generate fallback
+          let codeToDeploy = v0Component.code;
+          if (!codeToDeploy || codeToDeploy.trim().length === 0) {
+            this.logger.info('No v0 code available, generating fallback component', { demoId });
+            codeToDeploy = this.generateFallbackComponent(input, enhancedUseCase);
+          }
+          
+          const deploymentResult = await this.localDeployer.deployReactDemo(demoId, codeToDeploy);
+          liveDemoUrl = deploymentResult.url;
+          
+          // Add deployment info to metadata
+          metadata.localDeployment = {
+            url: deploymentResult.url,
+            port: deploymentResult.port,
+            directory: deploymentResult.directory,
+            deployedAt: new Date().toISOString()
+          };
+          
+          this.logger.info('Local demo deployment successful', { 
+            demoId, 
+            url: liveDemoUrl,
+            port: deploymentResult.port 
+          });
+        }
+        response.demo.liveDemoUrl = liveDemoUrl;
+      } catch (deployErr) {
+        this.logger.error('Local demo deployment failed', { demoId, error: deployErr });
+        // Continue without local deployment - fallback to v0 preview URL only
+      }
       
       response.generatedBy.costs = costs;
       response.progress.steps.finalization = 'completed';
@@ -242,7 +282,7 @@ export class HybridDemoService {
       // Keep in memory cache for quick access
       this.demos.set(demoId, response);
 
-      return response;
+  return response;
       
     } catch (error) {
       const totalTime = Date.now() - startTime;
@@ -591,6 +631,267 @@ export default function ${input.useCaseTitle.replace(/\s+/g, '')}Demo() {
       categories: ['users', 'transactions', 'metrics'],
       realistic: true
     };
+  }
+
+  /**
+   * Generate a fallback React component when v0.dev doesn't return actual code
+   */
+  private generateFallbackComponent(input: UseCaseInput, enhanced: EnhancedUseCaseData | null): string {
+    const title = input.useCaseTitle;
+    const capabilities = input.keyCapabilities.join(', ');
+    const category = input.category || 'Content Generation';
+    
+    if (category === 'Process Automation') {
+      return this.generateProcessAutomationTemplate(title, capabilities);
+    } else if (category === 'Personalized Experience') {
+      return this.generatePersonalizationTemplate(title, capabilities);
+    } else {
+      return this.generateContentGenerationTemplate(title, capabilities);
+    }
+  }
+
+  private generateContentGenerationTemplate(title: string, capabilities: string): string {
+    return `import React, { useState } from 'react';
+
+export default function DemoApp() {
+  const [processing, setProcessing] = useState(false);
+  const [results, setResults] = useState(null);
+
+  const handleGenerate = () => {
+    setProcessing(true);
+    setTimeout(() => {
+      setResults({
+        confidence: '94%',
+        processing_time: '3.2s',
+        content_generated: 'Sample generated content for ${title}',
+        insights: ['Key insight 1', 'Key insight 2', 'Key insight 3']
+      });
+      setProcessing(false);
+    }, 3000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">${title}</h1>
+          <p className="text-lg text-gray-600">Capabilities: ${capabilities}</p>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Input Section */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Input Configuration</h2>
+            <textarea 
+              className="w-full h-32 p-3 border rounded-md mb-4" 
+              placeholder="Enter your content requirements here..."
+              defaultValue="Sample financial analysis document needs to be generated..."
+            />
+            <button 
+              onClick={handleGenerate}
+              disabled={processing}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {processing ? 'Processing...' : 'Generate Content'}
+            </button>
+          </div>
+
+          {/* Results Section */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Generated Results</h2>
+            {processing && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Processing with AI...</p>
+              </div>
+            )}
+            {results && (
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Confidence:</span>
+                  <span className="font-semibold text-green-600">{results.confidence}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Processing Time:</span>
+                  <span className="font-semibold">{results.processing_time}</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Generated Content:</h4>
+                  <p className="text-gray-700 text-sm">{results.content_generated}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}`;
+  }
+
+  private generateProcessAutomationTemplate(title: string, capabilities: string): string {
+    return `import React, { useState, useEffect } from 'react';
+
+export default function DemoApp() {
+  const [metrics, setMetrics] = useState({
+    processed: 1247,
+    accuracy: '97%',
+    timeSaved: '68%',
+    activeWorkflows: 12
+  });
+
+  const workflowItems = [
+    { id: 1, name: 'Customer Onboarding', status: 'processing', priority: 'high' },
+    { id: 2, name: 'Document Verification', status: 'completed', priority: 'medium' },
+    { id: 3, name: 'Risk Assessment', status: 'pending', priority: 'low' }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">${title}</h1>
+          <p className="text-lg text-gray-600">Automation: ${capabilities}</p>
+        </header>
+
+        {/* Metrics Dashboard */}
+        <div className="grid grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+            <h3 className="text-2xl font-bold text-blue-600">{metrics.processed}</h3>
+            <p className="text-gray-600">Items Processed</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+            <h3 className="text-2xl font-bold text-green-600">{metrics.accuracy}</h3>
+            <p className="text-gray-600">Accuracy Rate</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+            <h3 className="text-2xl font-bold text-purple-600">{metrics.timeSaved}</h3>
+            <p className="text-gray-600">Time Saved</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+            <h3 className="text-2xl font-bold text-orange-600">{metrics.activeWorkflows}</h3>
+            <p className="text-gray-600">Active Workflows</p>
+          </div>
+        </div>
+
+        {/* Workflow Management */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Active Workflows</h2>
+          <div className="space-y-3">
+            {workflowItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-3 border rounded-md">
+                <div className="flex items-center space-x-3">
+                  <div className={\`w-3 h-3 rounded-full \${
+                    item.status === 'completed' ? 'bg-green-500' :
+                    item.status === 'processing' ? 'bg-yellow-500' : 'bg-gray-400'
+                  }\`}></div>
+                  <span className="font-medium">{item.name}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={\`px-2 py-1 text-xs rounded-full \${
+                    item.priority === 'high' ? 'bg-red-100 text-red-800' :
+                    item.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }\`}>
+                    {item.priority}
+                  </span>
+                  <span className="text-sm text-gray-600 capitalize">{item.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}`;
+  }
+
+  private generatePersonalizationTemplate(title: string, capabilities: string): string {
+    return `import React, { useState } from 'react';
+
+export default function DemoApp() {
+  const [selectedProfile, setSelectedProfile] = useState('executive');
+  
+  const profiles = {
+    executive: {
+      name: 'Sarah Johnson',
+      role: 'Senior Executive',
+      goals: ['Portfolio Growth', 'Risk Management'],
+      recommendations: ['Diversified ETF Portfolio', 'Treasury Bonds', 'Real Estate Investment']
+    },
+    entrepreneur: {
+      name: 'Mike Chen', 
+      role: 'Tech Entrepreneur',
+      goals: ['Business Expansion', 'Tax Optimization'],
+      recommendations: ['Growth Stocks', 'Startup Investments', 'Business Credit Line']
+    }
+  };
+
+  const currentProfile = profiles[selectedProfile];
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">${title}</h1>
+          <p className="text-lg text-gray-600">Personalization: ${capabilities}</p>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Profile Selection */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Customer Profile</h2>
+            <div className="space-y-3 mb-6">
+              {Object.entries(profiles).map(([key, profile]) => (
+                <label key={key} className="flex items-center space-x-3 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="profile" 
+                    value={key}
+                    checked={selectedProfile === key}
+                    onChange={(e) => setSelectedProfile(e.target.value)}
+                    className="text-blue-600"
+                  />
+                  <span className="font-medium">{profile.name} - {profile.role}</span>
+                </label>
+              ))}
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-2">Financial Goals:</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                {currentProfile.goals.map((goal, index) => (
+                  <li key={index}>{goal}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Personalized Recommendations */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">AI Recommendations</h2>
+            <div className="space-y-4">
+              {currentProfile.recommendations.map((rec, index) => (
+                <div key={index} className="p-4 border rounded-md bg-blue-50">
+                  <h4 className="font-semibold text-blue-900">{rec}</h4>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Tailored for {currentProfile.name}'s {currentProfile.role.toLowerCase()} profile
+                  </p>
+                  <div className="mt-2">
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                      95% Match
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}`;
   }
 
   async getServiceStats() {

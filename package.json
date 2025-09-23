@@ -11,7 +11,7 @@
     "install:packages": "npm install --workspaces",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai-engine\"",
     "dev:frontend": "npm run dev --workspace=packages/frontend",
-    "dev:backend": "npm run dev --workspace=packages/backend", 
+    "dev:backend": "npm run dev --workspace=packages/backend",
     "dev:ai-engine": "npm run dev --workspace=packages/ai-engine",
     "build": "npm run build --workspaces",
     "build:frontend": "npm run build --workspace=packages/frontend",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "concurrently": "^8.2.0",
+    "concurrently": "^8.2.2",
     "rimraf": "^5.0.0",
     "typescript": "^5.0.0"
   },
@@ -45,7 +45,7 @@
   },
   "keywords": [
     "ai",
-    "automation", 
+    "automation",
     "financial-services",
     "demo-generation",
     "pdf-processing",

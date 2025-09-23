@@ -102,11 +102,15 @@ const AIUseCaseAnalyzer = () => {
         throw new Error(err.message || err.error || 'Demo generation failed');
       }
       const data = await res.json();
-      // Use v0.dev preview URL if available, otherwise fallback to local demo page
-      const v0PreviewUrl = data.data?.demo?.v0Component?.preview;
-      const demoUrl = v0PreviewUrl || `/demo-app/${data.data.demoId}`;
-  setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'success', url: demoUrl}}));
+      console.log('Demo generation response:', data);
+    // Use liveDemoUrl if available, otherwise v0.dev preview, otherwise fallback to local demo page
+    const liveDemoUrl = data.data?.demo?.liveDemoUrl;
+    const v0PreviewUrl = data.data?.demo?.v0Component?.preview;
+    const demoUrl = liveDemoUrl || v0PreviewUrl || `/demo-app/${data.data?.demoId}`;
+    console.log('liveDemoUrl:', liveDemoUrl, 'v0PreviewUrl:', v0PreviewUrl, 'demoUrl:', demoUrl);
+    setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'success', url: demoUrl}}));
     } catch(e:any){
+      console.error('Demo generation error:', e);
   setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'error', error: e.message}}));
     }
   }, [apiBase]);
@@ -426,6 +430,93 @@ const AIUseCaseAnalyzer = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Test Button for Demo Generation */}
+        {!analysisResult && (
+          <div className="text-center">
+            <Button
+              onClick={() => {
+                setAnalysisResult({
+                  fileName: "sample-fintech-doc.pdf",
+                  fileSize: "2.5 MB",
+                  processingTime: "45 seconds",
+                  confidence: "94%",
+                  totalUseCases: 3,
+                  summary: {
+                    contentGeneration: 1,
+                    processAutomation: 1,
+                    personalizedExperience: 1
+                  },
+                  useCases: [
+                    {
+                      id: "uc1",
+                      title: "AI-Powered Financial Document Analysis",
+                      category: "Content Generation",
+                      description: "Automated analysis and insights generation from financial documents",
+                      businessValue: "Reduces document review time by 80% and improves accuracy",
+                      technicalRequirements: ["Azure OpenAI", "Document Intelligence", "Machine Learning"],
+                      keyFeatures: ["Document parsing", "Sentiment analysis", "Risk assessment"],
+                      keyCapabilities: {
+                        primary: ["Document Processing", "AI Analysis", "Real-time Insights"],
+                        secondary: ["Data Extraction", "Pattern Recognition"],
+                        advanced: ["Predictive Analytics", "Automated Reporting"]
+                      },
+                      capabilityDescription: "Advanced AI system for comprehensive financial document analysis",
+                      implementationComplexity: "Medium",
+                      estimatedROI: "250% within 18 months",
+                      timeToValue: "3-6 months",
+                      priority: "High",
+                      marketImpact: "High competitive advantage in document processing"
+                    },
+                    {
+                      id: "uc2",
+                      title: "Automated Risk Assessment Workflow",
+                      category: "Process Automation",
+                      description: "AI-driven risk assessment and compliance monitoring",
+                      businessValue: "Reduces manual risk assessment effort by 70%",
+                      technicalRequirements: ["Machine Learning", "Real-time Processing", "Integration APIs"],
+                      keyFeatures: ["Risk scoring", "Compliance checking", "Alert system"],
+                      keyCapabilities: {
+                        primary: ["Risk Analysis", "Automated Workflows", "Compliance Monitoring"],
+                        secondary: ["Data Integration", "Alert Management"],
+                        advanced: ["Predictive Risk Modeling", "Dynamic Thresholds"]
+                      },
+                      capabilityDescription: "Comprehensive automated risk assessment platform",
+                      implementationComplexity: "High",
+                      estimatedROI: "180% within 24 months",
+                      timeToValue: "6-12 months",
+                      priority: "High",
+                      marketImpact: "Significant improvement in risk management efficiency"
+                    },
+                    {
+                      id: "uc3",
+                      title: "Personalized Investment Recommendations",
+                      category: "Personalized Experience",
+                      description: "AI-powered personalized investment advice and portfolio optimization",
+                      businessValue: "Increases customer engagement by 60% and portfolio performance by 25%",
+                      technicalRequirements: ["Machine Learning", "Customer Data Platform", "Real-time Analytics"],
+                      keyFeatures: ["Portfolio analysis", "Recommendation engine", "Performance tracking"],
+                      keyCapabilities: {
+                        primary: ["Personalization", "Investment Analysis", "Customer Insights"],
+                        secondary: ["Portfolio Optimization", "Risk Profiling"],
+                        advanced: ["Behavioral Analysis", "Market Predictions"]
+                      },
+                      capabilityDescription: "Intelligent investment recommendation system with personalization",
+                      implementationComplexity: "Medium",
+                      estimatedROI: "200% within 12 months",
+                      timeToValue: "2-4 months",
+                      priority: "Medium",
+                      marketImpact: "Enhanced customer experience and retention"
+                    }
+                  ]
+                });
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg"
+            >
+              🚀 Load Sample Use Cases for Testing
+            </Button>
+          </div>
         )}
 
         {/* Results Section */}

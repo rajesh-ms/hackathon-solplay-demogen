@@ -211,6 +211,12 @@ export interface DemoMetadata {
   category: string;
   complexity: string;
   estimatedDemoTime: string;
+  localDeployment?: {
+    url: string;
+    port: number;
+    directory: string;
+    deployedAt: string;
+  };
 }
 
 export interface EnhancedDemoResponse {
@@ -245,6 +251,7 @@ export interface EnhancedDemoResponse {
     syntheticData: any;
     demoScript: string;
     metadata: DemoMetadata;
+    liveDemoUrl?: string | undefined;
   };
   
   generatedBy: {

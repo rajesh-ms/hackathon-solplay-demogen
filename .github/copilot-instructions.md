@@ -12,12 +12,31 @@
 - **Demo Generation**: Transform use case data into compelling visual demonstrations
 
 ### Core Components
-- **InputValidator** (`api-demogen/src/validators/input-validator.ts`): Validate incoming use case data
-- **V0PromptGenerator** (`api-demogen/src/services/v0-prompt-generator.ts`): Generate v0 prompts from use case data
-- **V0Client** (`api-demogen/src/services/v0-client.ts`): Generate React components via v0.dev API
-- **SyntheticDataGenerator** (`api-demogen/src/services/synthetic-data-generator.ts`): Create demo data
-- **DemoBuilder** (`api-demogen/src/services/demo-builder.ts`): Assemble complete demo applications
 
+### Local Demo Deployment & Live URL Passback
+
+**Goal:**
+- When a demo is generated via `api-demogen` (using v0-sdk), deploy the generated React app locally (e.g., as a standalone server on a unique port).
+- Pass back the local URL (including port) to the frontend UI so the user can access and interact with the live demo.
+
+**Implementation Plan:**
+1. **Demo Generation (existing):**
+  - Continue using v0-sdk to generate React component code.
+2. **Local Deployment:**
+  - After generation, write the React code to a temporary directory.
+  - Use a tool like `serve`, `vite`, or a minimal Express/Next.js server to host the generated app on a unique port (e.g., 4000+N).
+  - Start the server programmatically and track the port.
+3. **API Response:**
+  - When returning the demo result, include the local URL (e.g., `http://localhost:4001`) in the response payload.
+4. **Frontend UI:**
+  - On demo generation, display a link/button to open the live demo at the returned URL.
+5. **Cleanup:**
+  - Optionally, implement a TTL or manual cleanup for old demo servers.
+
+**Next Steps:**
+- Add a service to `api-demogen` to deploy and serve generated React code on a dynamic port.
+- Update the demo generation route to include the live URL in its response.
+- Ensure the frontend UI uses this URL for user access.
 ## Critical Workflow: Direct Input to Demo Generation
 
 ### Phase 1: API Input Validation and Processing
