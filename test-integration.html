@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { background: #0066cc; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0052a3; }
+        button:disabled { background: #cccccc; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { border-color: #28a745; background-color: #d4edda; }
+        .error { border-color: #dc3545; background-color: #f8d7da; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>SolPlay DemoGen Integration Test</h1>
+    
+    <div>
+        <h2>Test API Connection</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <button onclick="testDemoGeneration()" id="generateBtn">Test Demo Generation</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Testing health endpoint...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/health');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ Health Check Successful</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Health Check Failed</h3>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testDemoGeneration() {
+            const resultDiv = document.getElementById('result');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            resultDiv.innerHTML = '<div class="result">Testing demo generation...</div>';
+            
+            const payload = {
+                useCaseTitle: "AI-Powered Customer Support Integration Test",
+                keyCapabilities: ["Natural language processing", "Automated ticket routing", "Sentiment analysis"],
+                description: "Testing integration between UI and API",
+                category: "Process Automation",
+                targetAudience: "Financial Services Stakeholders",
+                industryVertical: "Financial Services",
+                generationPreferences: { useV0: true, useAzureOpenAI: true, fallbackToBasic: true },
+                aiEnhancementOptions: { enhanceDescription: true, generateSyntheticData: true, createUserJourney: true, suggestImprovements: true }
+            };
+            
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/generate-demo-enhanced', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                    throw new Error(errorData.message || errorData.error || 'Demo generation failed');
+                }
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ Demo Generation Successful</h3>
+                        <p><strong>Demo ID:</strong> ${data.data?.demoId || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Live Demo URL:</strong> ${data.data?.demo?.liveDemoUrl || 'Not available'}</p>
+                        <p><strong>V0 Preview URL:</strong> ${data.data?.demo?.v0Component?.preview || 'Not available'}</p>
+                        <details>
+                            <summary>Full Response</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Demo Generation Failed</h3>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Test Demo Generation';
+            }
+        }
+    </script>
+</body>
+</html>
