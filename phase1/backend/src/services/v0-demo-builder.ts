@@ -29,7 +29,7 @@ export class V0DemoBuilder {
     this.logger = LoggingService.getInstance();
     
     this.v0ApiKey = process.env.V0_API_KEY || '';
-    this.v0BaseUrl = process.env.V0_BASE_URL || 'https://api.v0.dev/v1';
+    this.v0BaseUrl = process.env.V0_BASE_URL || 'https://api.v0.dev/v1/chat/completions';
     this.v0Timeout = parseInt(process.env.V0_TIMEOUT || '30000');
 
     if (!this.v0ApiKey && process.env.AI_PROVIDER !== 'mock') {

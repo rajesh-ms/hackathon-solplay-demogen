@@ -1,9 +1,12 @@
 import { DocsProcessor } from './docs-processor';
-import { PDFParser } from './pdf-parser';
+import { PDFParser } from '../services/pdf-parser';
 import { UseCaseExtractor } from './usecase-extractor';
 import { V0PromptGenerator } from './v0-prompt-generator';
 import { V0DemoBuilder } from './v0-demo-builder';
 import { LoggingService } from './logging-service';
+import { DemoDeployer } from './demo-deployer';
+import { DependencyInstaller } from './dependency-installer';
+import { DevServer } from './dev-server';
 
 export interface WorkflowResult {
   success: boolean;
@@ -13,6 +16,9 @@ export interface WorkflowResult {
     useCaseExtraction: { success: boolean; data?: any; error?: string };
     promptGeneration: { success: boolean; data?: any; error?: string };
     demoGeneration: { success: boolean; data?: any; error?: string };
+    deployment: { success: boolean; data?: any; error?: string };
+    dependencyInstall: { success: boolean; data?: any; error?: string };
+    serverStart: { success: boolean; data?: any; error?: string };
   };
   finalDemo?: any;
   error?: string;
@@ -23,6 +29,8 @@ export interface WorkflowResult {
     pdfFileName?: string;
     useCaseTitle?: string;
     category?: string;
+    serverUrl?: string;
+    componentPath?: string;
   };
 }
 
@@ -32,6 +40,9 @@ export class DocsToDemo {
   private useCaseExtractor: UseCaseExtractor;
   private promptGenerator: V0PromptGenerator;
   private demoBuilder: V0DemoBuilder;
+  private deployer: DemoDeployer;
+  private dependencyInstaller: DependencyInstaller;
+  private devServer: DevServer;
   private logger: LoggingService;
 
   constructor(docsPath?: string) {
@@ -40,6 +51,9 @@ export class DocsToDemo {
     this.useCaseExtractor = new UseCaseExtractor();
     this.promptGenerator = new V0PromptGenerator();
     this.demoBuilder = new V0DemoBuilder();
+    this.deployer = new DemoDeployer();
+    this.dependencyInstaller = new DependencyInstaller();
+    this.devServer = new DevServer();
     this.logger = LoggingService.getInstance();
 
     this.logger.info('DocsToDemo orchestrator initialized', {
@@ -67,7 +81,10 @@ export class DocsToDemo {
         pdfExtraction: { success: false },
         useCaseExtraction: { success: false },
         promptGeneration: { success: false },
-        demoGeneration: { success: false }
+        demoGeneration: { success: false },
+        deployment: { success: false },
+        dependencyInstall: { success: false },
+        serverStart: { success: false }
       },
       metadata: {
         startTime,
@@ -102,12 +119,11 @@ export class DocsToDemo {
       }, 'DocsToDemo', 'executeWorkflow');
       
       const pdfContent = await this.pdfParser.extractText(firstPDF);
-      const processedText = this.pdfParser.preprocessText(pdfContent.text);
       
-      result.stages.pdfExtraction = { 
-        success: true, 
-        data: { 
-          textLength: processedText.length, 
+      result.stages.pdfExtraction = {
+        success: true,
+        data: {
+          textLength: pdfContent.text.length,
           totalPages: pdfContent.totalPages,
           extractedAt: pdfContent.extractedAt
         }
@@ -115,13 +131,10 @@ export class DocsToDemo {
 
       // Stage 3: Extract use case with Azure OpenAI
       this.logger.info('Stage 3: Extracting use case with Azure OpenAI', {
-        textLength: processedText.length
+        textLength: pdfContent.text.length
       }, 'DocsToDemo', 'executeWorkflow');
-      
-      const useCase = await this.useCaseExtractor.extractFirstUseCase({
-        ...pdfContent,
-        text: processedText
-      });
+
+      const useCase = await this.useCaseExtractor.extractFirstUseCase(pdfContent);
       
       result.stages.useCaseExtraction = { 
         success: true, 
@@ -170,7 +183,64 @@ export class DocsToDemo {
 
       if (demoResult.success) {
         result.finalDemo = demoResult;
-        result.success = true;
+      }
+
+      // Stage 6: Deploy to demo-app
+      if (demoResult.success) {
+        this.logger.info('Stage 6: Deploying to demo-app', {
+          useCaseTitle: useCase.title
+        }, 'DocsToDemo', 'executeWorkflow');
+
+        const deployResult = await this.deployer.deployDemo(demoResult, useCase.title);
+
+        result.stages.deployment = {
+          success: deployResult.success,
+          data: deployResult.success ? {
+            componentPath: deployResult.componentPath,
+            pageUpdated: deployResult.pageUpdated
+          } : undefined,
+          error: deployResult.error
+        };
+
+        if (deployResult.success && deployResult.componentPath) {
+          result.metadata.componentPath = deployResult.componentPath;
+        }
+
+        // Stage 7: Install dependencies
+        if (deployResult.success && demoResult.demoCode) {
+          this.logger.info('Stage 7: Installing dependencies', {}, 'DocsToDemo', 'executeWorkflow');
+
+          const depResult = await this.dependencyInstaller.detectAndInstall(demoResult.demoCode);
+
+          result.stages.dependencyInstall = {
+            success: depResult.success,
+            data: {
+              installed: depResult.installed,
+              alreadyInstalled: depResult.alreadyInstalled,
+              failed: depResult.failed
+            },
+            error: depResult.error
+          };
+
+          // Stage 8: Start dev server
+          this.logger.info('Stage 8: Starting development server', {}, 'DocsToDemo', 'executeWorkflow');
+
+          const serverResult = await this.devServer.startServer();
+
+          result.stages.serverStart = {
+            success: serverResult.success,
+            data: serverResult.success ? {
+              serverUrl: serverResult.serverUrl,
+              processId: serverResult.processId
+            } : undefined,
+            error: serverResult.error
+          };
+
+          if (serverResult.success && serverResult.serverUrl) {
+            result.metadata.serverUrl = serverResult.serverUrl;
+            result.success = true;
+          }
+        }
       }
 
       // Complete workflow
@@ -237,7 +307,25 @@ export class DocsToDemo {
             throw new Error('Prompt and use case data required');
           }
           return await this.demoBuilder.generateDemo(previousData.prompt, previousData.useCase);
-          
+
+        case 'deploy':
+          if (!previousData?.demoResult || !previousData?.useCaseTitle) {
+            throw new Error('Demo result and use case title required');
+          }
+          return await this.deployer.deployDemo(previousData.demoResult, previousData.useCaseTitle);
+
+        case 'install':
+          if (!previousData?.code) {
+            throw new Error('Code required for dependency detection');
+          }
+          return await this.dependencyInstaller.detectAndInstall(previousData.code);
+
+        case 'start':
+          return await this.devServer.startServer();
+
+        case 'stop':
+          return await this.devServer.stopServer();
+
         default:
           throw new Error(`Unknown stage: ${stageName}`);
       }
@@ -262,7 +350,10 @@ export class DocsToDemo {
         pdfParser: 'PDFParser - Extracts text from PDF files',
         useCaseExtractor: 'UseCaseExtractor - Uses Azure OpenAI for use case analysis',
         promptGenerator: 'V0PromptGenerator - Creates v0.dev optimized prompts',
-        demoBuilder: 'V0DemoBuilder - Generates React demos via v0.dev API'
+        demoBuilder: 'V0DemoBuilder - Generates React demos via v0.dev API',
+        deployer: 'DemoDeployer - Deploys generated code to demo-app',
+        dependencyInstaller: 'DependencyInstaller - Detects and installs npm dependencies',
+        devServer: 'DevServer - Manages Next.js development server'
       },
       environment: {
         aiProvider: process.env.AI_PROVIDER || 'hybrid',

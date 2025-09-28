@@ -6,10 +6,6 @@ import { fileURLToPath } from 'url';
 import { DocsToDemo } from '../services/docs-to-demo';
 import { LoggingService } from '../services/logging-service';
 
-// Load environment variables
-dotenv.config();
-dotenv.config({ path: '.env.local' }); // Also load .env.local if it exists
-
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +13,10 @@ const __dirname = path.dirname(__filename);
 // Ensure we're in the correct working directory
 const projectRoot = path.resolve(__dirname, '../../../..');
 process.chdir(projectRoot);
+
+// Load environment variables AFTER changing to project root
+dotenv.config();
+dotenv.config({ path: '.env.local' }); // Also load .env.local if it exists
 
 interface CLIOptions {
   docsPath?: string;
@@ -77,7 +77,7 @@ USAGE:
 
 OPTIONS:
   --docs-path, -d    Path to docs folder (default: ./docs)
-  --stage, -s        Run specific stage only (scan|extract|usecase|prompt|demo)
+  --stage, -s        Run specific stage only (scan|extract|usecase|prompt|demo|deploy|install|start|stop)
   --verbose, -v      Enable verbose logging
   --help, -h         Show this help message
 
@@ -107,6 +107,10 @@ WORKFLOW STAGES:
   3. usecase  - Extract use case with Azure OpenAI
   4. prompt   - Generate v0.dev optimized prompt
   5. demo     - Generate React demo with v0.dev
+  6. deploy   - Deploy generated code to demo-app
+  7. install  - Install required dependencies
+  8. start    - Start Next.js development server
+  9. stop     - Stop development server
 
 LOGS:
   Application logs: logs/application.log
@@ -166,6 +170,8 @@ For more information, see the README.md file.
       console.log(`📄 PDF File: ${result.metadata.pdfFileName || 'N/A'}`);
       console.log(`📝 Use Case: ${result.metadata.useCaseTitle || 'N/A'}`);
       console.log(`🏷️  Category: ${result.metadata.category || 'N/A'}`);
+      console.log(`📦 Component: ${result.metadata.componentPath || 'N/A'}`);
+      console.log(`🌐 Server: ${result.metadata.serverUrl || 'N/A'}`);
       
       console.log('\n📋 Stage Results:');
       console.log('=================');
@@ -184,10 +190,19 @@ For more information, see the README.md file.
         console.log(`Has Code: ${!!result.finalDemo.demoCode}`);
         console.log(`Has URL: ${!!result.finalDemo.demoUrl}`);
         console.log(`Enhanced: ${!!result.finalDemo.syntheticData}`);
-        
+
         if (result.finalDemo.demoUrl) {
           console.log(`Demo URL: ${result.finalDemo.demoUrl}`);
         }
+      }
+
+      if (result.metadata.serverUrl) {
+        console.log('\n🚀 Local Development:');
+        console.log('=====================');
+        console.log(`✅ Demo deployed and running`);
+        console.log(`🌐 Open in browser: ${result.metadata.serverUrl}`);
+        console.log(`\n⚠️  Note: Dev server is running in the background`);
+        console.log(`   Use 'npm run stop-demo' to stop the server`);
       }
       
       console.log(`\\n📄 Log Files:`);

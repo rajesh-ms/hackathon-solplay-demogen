@@ -13,6 +13,15 @@
 
 ### Core Components
 
+## Critical Workflow: Docs Folder to Demo Generation and Local Deployment
+
+The complete workflow now includes automatic deployment and local execution of generated demos.
+
+### Complete Workflow Overview
+```
+docs → scan PDF → extract text → use case extraction → v0 prompt → generate code → deploy to demo-app → install deps → start server
+```
+
 ### Local Demo Deployment & Live URL Passback
 
 **Goal:**
@@ -248,8 +257,8 @@ Create an engaging, personalized financial experience that demonstrates AI-drive
 
 ### Phase 4: V0 SDK Integration and Demo Generation
 ```typescript
-// Implementation in api-demogen/src/services/demo-generator.ts
-export class DemoGenerator {
+// Implementation in phase1/backend/src/services/v0-demo-builder.ts
+export class V0DemoBuilder {
   private v0Client: V0Client;
   private promptGenerator: V0PromptGenerator;
 
@@ -312,6 +321,195 @@ export class DemoGenerator {
 }
 ```
 
+### Phase 5: Demo Deployment to Local Environment
+```typescript
+// Implementation in phase1/backend/src/services/demo-deployer.ts
+export class DemoDeployer {
+  async deployDemo(demoResult: V0DemoResult, useCaseTitle: string): Promise<DeploymentResult> {
+    // 1. Ensure demo-app directory structure exists
+    await this.ensureDemoAppStructure();
+
+    // 2. Generate component name from use case title
+    const componentName = this.generateComponentName(useCaseTitle);
+
+    // 3. Save component to demo-app/src/components/
+    const componentPath = await this.saveComponent(componentName, demoResult.demoCode);
+
+    // 4. Update demo-app/src/app/page.tsx to import and render component
+    await this.updateMainPage(componentName);
+
+    return { success: true, componentPath, pageUpdated: true };
+  }
+
+  private generateComponentName(title: string): string {
+    // Convert "Automated Investment Portfolio" -> "AutomatedInvestmentPortfolio"
+    return title
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .split(/\s+/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
+  }
+
+  private async saveComponent(componentName: string, code: string): Promise<string> {
+    const componentPath = path.join(this.demoAppPath, 'src', 'components', `${componentName}.tsx`);
+
+    // Extract code from markdown blocks if present
+    let cleanCode = code;
+    const codeBlockMatch = code.match(/```(?:tsx|typescript|jsx|javascript)?\n([\s\S]*?)\n```/);
+    if (codeBlockMatch) {
+      cleanCode = codeBlockMatch[1];
+    }
+
+    // Ensure 'use client' directive and React import
+    if (!cleanCode.includes('use client')) {
+      cleanCode = `'use client';\n\n${cleanCode}`;
+    }
+
+    await fs.writeFile(componentPath, cleanCode, 'utf-8');
+    return componentPath;
+  }
+}
+```
+
+### Phase 6: Dependency Detection and Installation
+```typescript
+// Implementation in phase1/backend/src/services/dependency-installer.ts
+export class DependencyInstaller {
+  detectDependencies(code: string): string[] {
+    const dependencies = new Set<string>();
+
+    // Detect common libraries used in v0.dev components
+    const importPatterns = [
+      { pattern: /from ['"]recharts['"]/g, package: 'recharts' },
+      { pattern: /from ['"]lucide-react['"]/g, package: 'lucide-react' },
+      { pattern: /from ['"]@radix-ui\/(.*?)['"]/g, package: '@radix-ui/' },
+      { pattern: /from ['"]framer-motion['"]/g, package: 'framer-motion' },
+      // ... more patterns
+    ];
+
+    for (const { pattern, package: pkg } of importPatterns) {
+      if (pattern.test(code)) {
+        dependencies.add(pkg);
+      }
+    }
+
+    return Array.from(dependencies);
+  }
+
+  async installDependencies(dependencies: string[]): Promise<DependencyInstallResult> {
+    // 1. Check which dependencies are already installed
+    const { installed, missing } = await this.checkInstalledDependencies(dependencies);
+
+    if (missing.length === 0) {
+      return { success: true, alreadyInstalled: installed };
+    }
+
+    // 2. Install missing dependencies
+    const installCommand = `npm install ${missing.join(' ')}`;
+    await execAsync(installCommand, {
+      cwd: this.demoAppPath,
+      timeout: 120000
+    });
+
+    return { success: true, installed: missing, alreadyInstalled: installed };
+  }
+}
+```
+
+### Phase 7: Development Server Management
+```typescript
+// Implementation in phase1/backend/src/services/dev-server.ts
+export class DevServer {
+  private serverProcess: ChildProcess | null = null;
+  private serverUrl: string = 'http://localhost:3000';
+
+  async startServer(): Promise<DevServerResult> {
+    // 1. Spawn npm run dev process
+    this.serverProcess = spawn('npm', ['run', 'dev'], {
+      cwd: this.demoAppPath,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: true
+    });
+
+    // 2. Monitor stdout for ready signal
+    let serverStarted = false;
+    this.serverProcess.stdout?.on('data', (data) => {
+      const output = data.toString();
+      if (output.includes('Local:') || output.includes('localhost:3000') || output.includes('Ready in')) {
+        serverStarted = true;
+      }
+    });
+
+    // 3. Wait for server to be ready (max 30 seconds)
+    const maxWaitTime = 30000;
+    const checkInterval = 500;
+    let waited = 0;
+
+    while (!serverStarted && waited < maxWaitTime) {
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      waited += checkInterval;
+    }
+
+    return {
+      success: true,
+      serverUrl: this.serverUrl,
+      processId: this.serverProcess.pid
+    };
+  }
+
+  async stopServer(): Promise<{ success: boolean }> {
+    if (this.serverProcess) {
+      this.serverProcess.kill('SIGTERM');
+      this.serverProcess = null;
+    }
+    return { success: true };
+  }
+
+  getStatus(): DevServerStatus {
+    const running = this.serverProcess !== null && !this.serverProcess.killed;
+    return {
+      running,
+      processId: this.serverProcess?.pid,
+      serverUrl: running ? this.serverUrl : undefined
+    };
+  }
+}
+```
+
+### Phase 8: Complete Workflow Orchestration
+```typescript
+// Implementation in phase1/backend/src/services/docs-to-demo.ts
+export class DocsToDemo {
+  async executeWorkflow(): Promise<WorkflowResult> {
+    // Stages 1-5: Original workflow (scan, extract, usecase, prompt, demo)
+    // ... (existing code)
+
+    // Stage 6: Deploy to demo-app
+    if (demoResult.success) {
+      const deployResult = await this.deployer.deployDemo(demoResult, useCase.title);
+      result.stages.deployment = { success: deployResult.success, data: deployResult };
+
+      // Stage 7: Install dependencies
+      if (deployResult.success && demoResult.demoCode) {
+        const depResult = await this.dependencyInstaller.detectAndInstall(demoResult.demoCode);
+        result.stages.dependencyInstall = { success: depResult.success, data: depResult };
+
+        // Stage 8: Start dev server
+        const serverResult = await this.devServer.startServer();
+        result.stages.serverStart = { success: serverResult.success, data: serverResult };
+
+        if (serverResult.success) {
+          result.metadata.serverUrl = serverResult.serverUrl;
+          result.success = true;
+        }
+      }
+    }
+
+    return result;
+  }
+}
+```
+
 ## Environment Configuration
 
 ### Required Environment Variables
@@ -327,13 +525,55 @@ DEMO_GENERATION_PROVIDER=v0
 
 ## Development Workflow
 
-### 1. Run API Server
+### 1. Run Complete Workflow (Recommended)
+```bash
+npm run generate-demo-from-docs
+```
+
+This single command now:
+- Scans docs folder for PDFs
+- Extracts text from first PDF
+- Analyzes content with Azure OpenAI
+- Generates v0.dev prompt
+- Creates React demo with v0.dev API
+- **Deploys code to demo-app/**
+- **Installs required dependencies**
+- **Starts dev server at http://localhost:3000**
+
+### 2. Individual Stage Execution
+```bash
+# Stage 1: Scan docs folder
+npm run scan-docs
+
+# Stage 2: Extract use case from first PDF
+npm run extract-usecase
+
+# Stage 3: Generate v0 prompt
+npm run generate-prompt
+
+# Stage 4: Create demo with v0
+npm run generate-demo
+
+# Stage 5: Deploy to demo-app
+npm run deploy-demo
+
+# Stage 6: Install dependencies
+npm run install-deps
+
+# Stage 7: Start dev server
+npm run start-demo
+
+# Stage 8: Stop dev server
+npm run stop-demo
+```
+
+### 3. Alternative: Run API Server for Direct Input
 ```bash
 cd api-demogen
 npm run dev
 ```
 
-### 2. Test API with Sample Data
+### 4. Test API with Sample Data
 ```bash
 # Test with sample use case data
 curl -X POST http://localhost:3000/api/v1/generate-demo \
@@ -353,6 +593,18 @@ curl http://localhost:3000/api/v1/demo-status/{demoId}
 
 # View generated demo
 curl http://localhost:3000/api/v1/demos/{demoId}
+```
+
+### 4. Local Development Workflow
+After running the complete workflow:
+```bash
+# Demo is automatically deployed and running at http://localhost:3000
+
+# To stop the dev server
+npm run stop-demo
+
+# To restart the server
+npm run start-demo
 ```
 
 ## Quality Standards
@@ -393,5 +645,22 @@ curl http://localhost:3000/api/v1/demos/{demoId}
 5. **Synthetic Data Integration**: Include realistic, compelling data that demonstrates business value
 6. **Responsive Design**: Ensure demos work across desktop and tablet devices
 7. **Error Resilience**: Provide graceful fallbacks when services are unavailable
+8. **Automatic Deployment**: Generated demos are automatically deployed to demo-app and running locally
+9. **Dependency Management**: Required npm packages are detected and installed automatically
+10. **Local Execution**: Dev server is started automatically and accessible at http://localhost:3000
+
+## Workflow Summary
+
+This complete workflow transforms static solution play PDFs into **live, running, interactive demos** automatically:
+
+1. **PDF Processing** → Scan and extract text from docs folder
+2. **AI Analysis** → Azure OpenAI extracts use cases and requirements
+3. **Code Generation** → v0.dev creates professional React components
+4. **Deployment** → Code is saved to demo-app/src/components/
+5. **Dependency Installation** → Required packages detected and installed via npm
+6. **Server Start** → Next.js dev server launched at http://localhost:3000
+7. **Result** → **Live demo running locally, ready to view in browser**
+
+The entire process is automated and requires only one command: `npm run generate-demo-from-docs`
 
 This workflow transforms structured use case input into interactive, appealing demos automatically using the power of v0.dev for React component generation.

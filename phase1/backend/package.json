@@ -17,7 +17,11 @@
     "extract-usecase": "tsx src/cli/docs-to-demo.ts --stage usecase",
     "generate-prompt": "tsx src/cli/docs-to-demo.ts --stage prompt",
     "generate-demo": "tsx src/cli/docs-to-demo.ts --stage demo",
-    "generate-demo-mock": "tsx src/cli/docs-to-demo.ts"
+    "generate-demo-mock": "tsx src/cli/docs-to-demo.ts",
+    "deploy-demo": "tsx src/cli/docs-to-demo.ts --stage deploy",
+    "install-deps": "tsx src/cli/docs-to-demo.ts --stage install",
+    "start-demo": "tsx src/cli/docs-to-demo.ts --stage start",
+    "stop-demo": "tsx src/cli/docs-to-demo.ts --stage stop"
   },
   "dependencies": {
     "cors": "^2.8.5",
