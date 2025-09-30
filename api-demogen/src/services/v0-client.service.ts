@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { v0 } from 'v0-sdk';
+import { createClient } from 'v0-sdk';
 import winston from 'winston';
 import { UseCaseData } from '../types/azure-openai';
 
@@ -45,23 +45,31 @@ export class V0ClientService {
     this.logger = logger;
     this.config = this.loadConfiguration();
     this.client = this.createHttpClient();
-    // v0 SDK automatically uses V0_API_KEY environment variable
-    this.v0SDK = v0;
+    // Create configured v0 SDK client
+    this.v0SDK = createClient({
+      apiKey: this.config.apiKey
+    });
   }
 
   private loadConfiguration(): V0Config {
     const apiKey = process.env.V0_API_KEY;
-    const baseUrl = process.env.V0_BASE_URL || 'https://api.v0.dev';
+    const baseUrl = process.env.V0_BASE_URL || 'https://api.v0.dev/v1';
 
     if (!apiKey) {
       throw new Error('V0_API_KEY is required');
     }
 
+    console.log('V0.dev Configuration loaded:', {
+      hasApiKey: !!apiKey,
+      baseUrl,
+      apiKeyPrefix: apiKey ? `${apiKey.substring(0, 10)}...` : 'none'
+    });
+
     return {
       apiKey,
       baseUrl,
       maxTokens: parseInt(process.env.V0_MAX_TOKENS || '4000'),
-      timeoutMs: parseInt(process.env.V0_TIMEOUT_MS || '30000')
+      timeoutMs: parseInt(process.env.V0_TIMEOUT || '60000')
     };
   }
 
@@ -92,14 +100,12 @@ export class V0ClientService {
         styling: options.styling || 'tailwindcss'
       });
 
-      // Try SDK first, fallback to direct API
-      try {
-        return await this.generateWithSDK(options, startTime);
-      } catch (sdkError) {
-        this.logger.warn('SDK generation failed, falling back to direct API', { sdkError });
-        return await this.generateWithDirectAPI(options, startTime);
-      }
-    } catch (error) {
+      // Use v0-sdk for generation with timeout
+      return await Promise.race([
+        this.generateWithSDK(options, startTime),
+        this.createTimeoutPromise(this.config.timeoutMs)
+      ]);
+    } catch (error: any) {
       const duration = Date.now() - startTime;
 
       this.logger.error('All v0.dev generation methods failed', {
@@ -112,21 +118,38 @@ export class V0ClientService {
     }
   }
 
+  private createTimeoutPromise(timeoutMs: number): Promise<V0Response> {
+    return new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`v0.dev generation timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+  }
+
   private async generateWithSDK(options: {
     prompt: string;
     framework?: string;
     styling?: string;
   }, startTime: number): Promise<V0Response> {
-    const enhancedPrompt = `Create a ${options.framework || 'React'} component using ${options.styling || 'Tailwind CSS'}:
+    const enhancedPrompt = `Create a comprehensive ${options.framework || 'React'} application using ${options.styling || 'Tailwind CSS'}:
 
 ${options.prompt}
 
-CRITICAL REQUIREMENTS FOR DEMO:
-- Use ONLY synthetic/mock data - NO file uploads, external APIs, or user input required
-- Pre-populate ALL form fields, data tables, and content areas with realistic sample data
-- Include interactive buttons and elements that simulate real functionality
-- Make it a completely self-contained demo that works immediately without any setup
-- Ensure all data visualizations show compelling sample metrics and charts`;
+CRITICAL REQUIREMENTS FOR DEMO APPLICATION:
+1. **Complete Self-Contained Demo** - Use ONLY synthetic/mock data, no external APIs or file uploads needed
+2. **Rich Interactive Features** - Multiple tabs, forms, charts, progress bars, and realistic user interactions
+3. **Pre-populated Data** - All forms, tables, and displays should show compelling sample data immediately
+4. **Professional UI** - Modern design with proper spacing, colors, and responsive layout
+5. **Functional Elements** - All buttons, forms, and interactions should work and demonstrate the use case effectively
+6. **Comprehensive Content** - Include executive summaries, metrics, charts, and detailed insights
+7. **No External Dependencies** - Everything should work without additional setup or API keys
+
+Make this a production-quality demo that showcases real business value with rich, interactive content.`;
+
+    this.logger.info('Sending enhanced prompt to v0.dev SDK', {
+      promptLength: enhancedPrompt.length,
+      requestCount: this.requestCount
+    });
 
     const chat: any = await this.v0SDK.chats.create({
       message: enhancedPrompt
@@ -140,7 +163,8 @@ CRITICAL REQUIREMENTS FOR DEMO:
     this.logger.info('v0.dev component generated successfully via SDK', {
       duration,
       requestCount: this.requestCount,
-      chatId
+      chatId,
+      hasFiles: chat.files ? chat.files.length : 0
     });
 
     // Extract code from chat files if available
@@ -148,11 +172,31 @@ CRITICAL REQUIREMENTS FOR DEMO:
     let preview = `https://v0.dev/chat/${chatId}`;
 
     if (chat.files && chat.files.length > 0) {
+      this.logger.info('Extracting code from v0.dev files', {
+        fileCount: chat.files.length,
+        fileNames: chat.files.map((f: any) => f.name)
+      });
+
       // Find the main component file
       const mainFile = chat.files.find((f: any) => f.name && (f.name.includes('.tsx') || f.name.includes('.jsx'))) || chat.files[0];
       if (mainFile && mainFile.content) {
         code = mainFile.content;
+        this.logger.info('Successfully extracted code from v0.dev', {
+          codeLength: code.length,
+          fileName: mainFile.name
+        });
+      } else {
+        this.logger.warn('No usable code found in v0.dev files', {
+          files: chat.files.map((f: any) => ({ name: f.name, hasContent: !!f.content }))
+        });
       }
+    } else {
+      this.logger.warn('No files returned from v0.dev SDK', { chatId });
+    }
+
+    // If no code was extracted, this will trigger fallback in calling method
+    if (!code || code.trim().length === 0) {
+      this.logger.warn('No usable code extracted from v0.dev response', { chatId });
     }
 
     return {
@@ -377,21 +421,44 @@ Make it visually appealing for presentations with fully functional demo interfac
 
   async testConnection(): Promise<boolean> {
     try {
-      // Test with a minimal API call to v0.dev Model API
-      const response = await this.client.post('/v1/chat/completions', {
-        model: 'v0-1.5-md',
-        messages: [
-          {
-            role: 'user',
-            content: 'Hello, this is a connection test.'
-          }
-        ],
-        max_completion_tokens: 10
-      }, { timeout: 5000 });
+      this.logger.info('Testing v0.dev connection with SDK', {
+        sdkConfigured: !!this.v0SDK,
+        apiKey: this.config.apiKey ? 'configured' : 'missing',
+        baseUrl: this.config.baseUrl
+      });
 
-      return response.status === 200 && response.data.choices && response.data.choices.length > 0;
-    } catch (error) {
-      this.logger.warn('v0.dev connection test failed', { error });
+      // Simple connection test - just check if we can create a client
+      if (!this.v0SDK) {
+        this.logger.error('V0 SDK not configured');
+        return false;
+      }
+
+      // Test with a simple v0 SDK call
+      const testPromise = this.v0SDK.chats.create({
+        message: "Test connection - create a simple React button component"
+      });
+
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection test timeout')), 10000);
+      });
+
+      const response = await Promise.race([testPromise, timeoutPromise]);
+
+      this.logger.info('v0.dev connection test successful', {
+        chatId: response?.id,
+        hasResponse: !!response
+      });
+
+      return !!(response && (response.id || response.files));
+    } catch (error: any) {
+      this.logger.warn('v0.dev connection test failed, will use fallback', {
+        error: error?.message || error,
+        errorType: error?.constructor?.name,
+        apiKeyPresent: !!this.config.apiKey
+      });
+
+      // Don't fail completely - allow fallback
       return false;
     }
   }

@@ -185,8 +185,7 @@ export default defineConfig({
         noUnusedParameters: false,
         noFallthroughCasesInSwitch: true
       },
-      include: ['src'],
-      references: [{ path: './tsconfig.node.json' }]
+      include: ['src']
     };
     await fs.writeFile(path.join(tempDir, 'tsconfig.json'), JSON.stringify(tsConfig, null, 2));
 

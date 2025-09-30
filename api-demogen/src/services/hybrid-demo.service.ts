@@ -20,6 +20,7 @@ export interface HybridGenerationOptions {
   useAzureOpenAI: boolean;
   fallbackToBasic: boolean;
   maxGenerationTime: number;
+  demoId?: string; // Optional predefined demo ID
   aiEnhancementOptions: {
     enhanceDescription: boolean;
     generateSyntheticData: boolean;
@@ -55,11 +56,9 @@ export class HybridDemoService {
         this.logger.info('Azure OpenAI service initialized for content enhancement');
       }
 
-      // Test v0.dev connection
-      const v0Available = await this.v0Client.testConnection();
-      if (!v0Available) {
-        this.logger.warn('v0.dev service not available - will use fallback generation');
-      }
+      // Skip connection test - try V0.dev generation directly
+      // Connection test often times out but actual generation may still work
+      this.logger.info('Skipping v0.dev connection test - will attempt generation directly');
 
       this.logger.info('Hybrid demo service initialized successfully');
     } catch (error) {
@@ -73,7 +72,7 @@ export class HybridDemoService {
     options: HybridGenerationOptions
   ): Promise<EnhancedDemoResponse> {
     const startTime = Date.now();
-    const demoId = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const demoId = options.demoId || `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     // Predeclare response so we can reference it in catch block safely
     let workingResponse: EnhancedDemoResponse | undefined;
 
@@ -111,12 +110,18 @@ export class HybridDemoService {
       // retain reference
       workingResponse = response;
 
+      // Store in memory for immediate access by status polling
+      this.demos.set(demoId, response);
+
       // Store initial demo state
       await this.storage.updateDemoStatus(demoId, response);
 
   // Step 1: Input Validation
       response.progress.steps.inputValidation = 'completed';
       response.progress.percentage = 20;
+
+      // Update in-memory cache
+      this.demos.set(demoId, response);
       
       // Step 2: AI Enhancement (if enabled)
       let enhancedUseCase: EnhancedUseCaseData | null = null;
@@ -124,6 +129,9 @@ export class HybridDemoService {
         response.status = 'ai_enhancing';
         response.progress.currentStep = 'AI content enhancement';
         response.progress.steps.aiEnhancement = 'processing';
+
+        // Update in-memory cache
+        this.demos.set(demoId, response);
         
         try {
           enhancedUseCase = await this.azureOpenAI.enhanceUseCase(input);
@@ -151,13 +159,18 @@ export class HybridDemoService {
       
       response.progress.percentage = 50;
 
-      // Step 3: v0.dev Component Generation
+      // Step 3: Component Generation (V0.dev with Enhanced Fallback)
       let v0Component: any = null;
+      let usingFallback = false;
+
       if (options.useV0) {
         response.status = 'v0_generating';
         response.progress.currentStep = 'Generating React components';
         response.progress.steps.v0Generation = 'processing';
-        
+
+        // Update in-memory cache
+        this.demos.set(demoId, response);
+
         try {
           const useCaseForPrompt = enhancedUseCase || this.createBasicUseCaseData(input);
           const prompt = this.v0Client.generatePromptFromUseCase(useCaseForPrompt);
@@ -176,25 +189,39 @@ export class HybridDemoService {
 
           response.progress.steps.v0Generation = 'completed';
           response.generatedBy.v0 = true;
-          this.logger.info('v0.dev component generated', { demoId, componentId: v0Component.componentId });
-
-          // Update status
-          await this.storage.updateDemoStatus(demoId, {
-            progress: response.progress,
-            generatedBy: response.generatedBy
+          this.logger.info('v0.dev component generated successfully', {
+            demoId,
+            componentId: v0Component.componentId,
+            codeLength: v0Component.code ? v0Component.code.length : 0
           });
-        } catch (error) {
-          this.logger.error('v0.dev generation failed', { demoId, error });
-          
+
+        } catch (error: any) {
+          this.logger.warn('v0.dev generation failed, using enhanced fallback', {
+            demoId,
+            error: error?.message || error,
+            errorType: error?.constructor?.name
+          });
+
           if (!options.fallbackToBasic) {
             throw new Error('v0.dev generation failed and fallback disabled');
           }
-          
-          // Create fallback component
-          v0Component = this.createFallbackComponent(input);
+
+          // Create enhanced fallback component with rich data
+          v0Component = this.createEnhancedFallbackComponent(input, enhancedUseCase);
+          usingFallback = true;
           response.progress.steps.v0Generation = 'completed';
+
+          this.logger.info('Enhanced fallback component created', {
+            demoId,
+            componentId: v0Component.componentId,
+            category: input.category,
+            codeLength: v0Component.code.length
+          });
         }
       } else {
+        // Create enhanced fallback when V0 is disabled
+        v0Component = this.createEnhancedFallbackComponent(input, enhancedUseCase);
+        usingFallback = true;
         response.progress.steps.v0Generation = 'completed';
       }
       
@@ -228,18 +255,34 @@ export class HybridDemoService {
       let liveDemoUrl: string | undefined = undefined;
       try {
         if (v0Component?.componentId) {
-          this.logger.info('Starting local demo deployment', { demoId, componentId: v0Component.componentId });
-          
-          // Get code from v0 component or generate fallback
+          this.logger.info('Starting local demo deployment', {
+            demoId,
+            componentId: v0Component.componentId,
+            hasV0Code: !!(v0Component.code && v0Component.code.trim().length > 0),
+            codeLength: v0Component.code ? v0Component.code.length : 0
+          });
+
+          // Prefer v0 code, but generate enhanced fallback if needed
           let codeToDeploy = v0Component.code;
+          let usingFallback = false;
+
           if (!codeToDeploy || codeToDeploy.trim().length === 0) {
-            this.logger.info('No v0 code available, generating fallback component', { demoId });
+            this.logger.warn('No v0 code available, generating enhanced fallback component', {
+              demoId,
+              v0ComponentId: v0Component.componentId
+            });
             codeToDeploy = this.generateFallbackComponent(input, enhancedUseCase);
+            usingFallback = true;
+          } else {
+            this.logger.info('Using V0.dev generated code for deployment', {
+              demoId,
+              codeLength: codeToDeploy.length
+            });
           }
-          
+
           const deploymentResult = await this.localDeployer.deployReactDemo(demoId, codeToDeploy);
           liveDemoUrl = deploymentResult.url;
-          
+
           // Add deployment info to metadata
           metadata.localDeployment = {
             url: deploymentResult.url,
@@ -247,11 +290,12 @@ export class HybridDemoService {
             directory: deploymentResult.directory,
             deployedAt: new Date().toISOString()
           };
-          
-          this.logger.info('Local demo deployment successful', { 
-            demoId, 
+
+          this.logger.info('Local demo deployment successful', {
+            demoId,
             url: liveDemoUrl,
-            port: deploymentResult.port 
+            port: deploymentResult.port,
+            usingV0Code: !usingFallback
           });
         }
         response.demo.liveDemoUrl = liveDemoUrl;
@@ -369,6 +413,24 @@ export class HybridDemoService {
         styling: 'tailwindcss',
         generatedAt: new Date().toISOString(),
         complexity: 'simple'
+      }
+    };
+  }
+
+  private createEnhancedFallbackComponent(input: UseCaseInput, enhanced?: any): any {
+    const category = input.category || 'Content Generation';
+
+    return {
+      componentId: `enhanced_fallback_${Date.now()}`,
+      code: this.generateEnhancedFallbackReactCode(input, enhanced),
+      preview: '',
+      metadata: {
+        framework: 'react',
+        styling: 'tailwindcss',
+        generatedAt: new Date().toISOString(),
+        complexity: 'moderate',
+        source: 'enhanced_fallback',
+        category
       }
     };
   }
@@ -807,6 +869,667 @@ export default function DemoApp() {
 }`;
   }
 
+  private generateEnhancedFallbackReactCode(input: UseCaseInput, enhanced?: any): string {
+    const category = input.category || 'Content Generation';
+    const title = input.useCaseTitle;
+    const capabilities = input.keyCapabilities.join(', ');
+    const description = input.description || `${title} demonstrating ${capabilities}`;
+
+    // Use enhanced data if available
+    const sampleData = enhanced?.sampleData || this.generateSampleData(category);
+    const userJourney = enhanced?.userJourney?.steps || input.keyCapabilities.map((cap, i) => ({
+      title: `${cap}`,
+      description: `Advanced ${cap.toLowerCase()} functionality`
+    }));
+
+    if (category === 'Process Automation') {
+      return this.generateEnhancedProcessAutomationTemplate(title, description, capabilities, sampleData);
+    } else if (category === 'Personalized Experience') {
+      return this.generateEnhancedPersonalizationTemplate(title, description, capabilities, sampleData);
+    } else {
+      return this.generateEnhancedContentGenerationTemplate(title, description, capabilities, sampleData);
+    }
+  }
+
+  private generateSampleData(category: string): any {
+    const baseData = {
+      metrics: {
+        accuracy: Math.floor(Math.random() * 5) + 94, // 94-98%
+        processing_time: (Math.random() * 2 + 1).toFixed(1), // 1.0-3.0s
+        confidence: Math.floor(Math.random() * 8) + 90, // 90-97%
+        items_processed: Math.floor(Math.random() * 500) + 1000 // 1000-1500
+      },
+      trends: Array.from({length: 7}, (_, i) => ({
+        day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+        value: Math.floor(Math.random() * 30) + 70
+      }))
+    };
+
+    if (category === 'Process Automation') {
+      return {
+        ...baseData,
+        workflows: [
+          { name: 'Customer Onboarding', status: 'active', processed: 247, success_rate: 96 },
+          { name: 'Document Processing', status: 'running', processed: 189, success_rate: 94 },
+          { name: 'Compliance Checks', status: 'completed', processed: 156, success_rate: 98 }
+        ]
+      };
+    } else if (category === 'Personalized Experience') {
+      return {
+        ...baseData,
+        profiles: [
+          { name: 'Sarah Johnson', segment: 'Premium', score: 94, recommendations: 8 },
+          { name: 'Mike Chen', segment: 'Growth', score: 87, recommendations: 12 },
+          { name: 'Lisa Davis', segment: 'Standard', score: 91, recommendations: 6 }
+        ]
+      };
+    } else {
+      return {
+        ...baseData,
+        content: [
+          { type: 'Reports', generated: 45, quality: 96 },
+          { type: 'Summaries', generated: 78, quality: 94 },
+          { type: 'Analytics', generated: 32, quality: 98 }
+        ]
+      };
+    }
+  }
+
+  private generateEnhancedContentGenerationTemplate(title: string, description: string, capabilities: string, sampleData: any): string {
+    return `import React, { useState, useEffect } from 'react';
+
+export default function ${title.replace(/[^A-Za-z0-9]/g, '')}Demo() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [results, setResults] = useState(null);
+  const [metrics, setMetrics] = useState(${JSON.stringify(sampleData.metrics)});
+  const [contentData] = useState(${JSON.stringify(sampleData.content)});
+
+  const processContent = () => {
+    setProcessing(true);
+    setProgress(0);
+    setActiveTab('processing');
+
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setProcessing(false);
+          setResults({
+            generated_content: 'Sample content generated with AI analysis',
+            quality_score: metrics.confidence,
+            insights: [
+              'Content optimized for target audience',
+              'SEO keywords integrated successfully',
+              'Readability score: Excellent (95/100)',
+              'Engagement potential: High'
+            ]
+          });
+          setActiveTab('results');
+          return 100;
+        }
+        return prev + Math.random() * 15 + 5;
+      });
+    }, 200);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <div className="bg-white shadow-lg border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <h1 className="text-3xl font-bold text-gray-900">${title}</h1>
+          <p className="text-gray-600 mt-2">${description}</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Navigation */}
+        <div className="flex space-x-1 mb-8 bg-white p-1 rounded-lg shadow-md">
+          {['overview', 'processing', 'results'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => !processing && setActiveTab(tab)}
+              className={\`flex-1 py-3 px-6 rounded-md text-sm font-medium transition-all duration-200 \${
+                activeTab === tab
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              } \${processing && tab !== activeTab ? 'opacity-50 cursor-not-allowed' : ''}\`}
+            >
+              {tab === 'overview' && '📊 '}
+              {tab === 'processing' && '⚡ '}
+              {tab === 'results' && '🎯 '}
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Metrics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div className="text-3xl font-bold text-blue-600">{metrics.accuracy}%</div>
+                <div className="text-gray-600 text-sm">Accuracy Rate</div>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div className="text-3xl font-bold text-green-600">{metrics.processing_time}s</div>
+                <div className="text-gray-600 text-sm">Avg Processing Time</div>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+                <div className="text-3xl font-bold text-purple-600">{metrics.items_processed}</div>
+                <div className="text-gray-600 text-sm">Items Processed</div>
+              </div>
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+                <div className="text-3xl font-bold text-orange-600">{metrics.confidence}%</div>
+                <div className="text-gray-600 text-sm">Confidence Score</div>
+              </div>
+            </div>
+
+            {/* Content Generation Panel */}
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <h2 className="text-2xl font-semibold mb-6">Content Generation</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Input Section */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Input Configuration</h3>
+                  <textarea
+                    className="w-full h-32 p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    placeholder="Enter your content requirements..."
+                    defaultValue="Generate a comprehensive financial analysis report for Q3 results..."
+                  />
+                  <button
+                    onClick={processContent}
+                    disabled={processing}
+                    className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all duration-200 font-medium"
+                  >
+                    {processing ? 'Processing...' : '🚀 Generate Content'}
+                  </button>
+                </div>
+
+                {/* Preview Section */}
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Content Types</h3>
+                  <div className="space-y-3">
+                    {contentData.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">{item.type}</div>
+                          <div className="text-sm text-gray-600">{item.generated} generated</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-semibold text-green-600">{item.quality}%</div>
+                          <div className="text-xs text-gray-500">Quality</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Processing Tab */}
+        {activeTab === 'processing' && (
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-2xl font-semibold mb-6">AI Processing</h2>
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+                <span className="text-lg">
+                  {processing ? 'Analyzing and generating content...' : 'Processing complete!'}
+                </span>
+              </div>
+
+              <div className="w-full bg-gray-200 rounded-full h-4">
+                <div
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 h-4 rounded-full transition-all duration-300"
+                  style={{ width: \`\${progress}%\` }}
+                ></div>
+              </div>
+              <p className="text-center text-gray-600">Progress: {Math.round(progress)}%</p>
+
+              {/* Processing Steps */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                  <h3 className="font-semibold text-blue-800">Content Analysis</h3>
+                  <p className="text-sm text-blue-700 mt-1">Analyzing input requirements and context</p>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                  <h3 className="font-semibold text-purple-800">AI Generation</h3>
+                  <p className="text-sm text-purple-700 mt-1">Generating content using advanced AI models</p>
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                  <h3 className="font-semibold text-green-800">Quality Check</h3>
+                  <p className="text-sm text-green-700 mt-1">Validating content quality and accuracy</p>
+                </div>
+                <div className="p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500">
+                  <h3 className="font-semibold text-orange-800">Optimization</h3>
+                  <p className="text-sm text-orange-700 mt-1">Optimizing for target audience and goals</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Results Tab */}
+        {activeTab === 'results' && results && (
+          <div className="space-y-6">
+            {/* Success Message */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">✅ Content Generated Successfully</h3>
+              <p className="text-green-700">{results.generated_content}</p>
+            </div>
+
+            {/* Results Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Quality Metrics */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Quality Metrics</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Overall Quality Score</span>
+                    <span className="font-bold text-blue-600">{results.quality_score}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{width: \`\${results.quality_score}%\`}}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Insights */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-semibold mb-4">Key Insights</h3>
+                <ul className="space-y-3">
+                  {results.insights.map((insight, index) => (
+                    <li key={index} className="flex items-start space-x-3">
+                      <span className="text-green-500 mt-1">✓</span>
+                      <span className="text-gray-700">{insight}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4">
+              <button className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium">
+                📊 Export Report
+              </button>
+              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                📤 Share Results
+              </button>
+              <button
+                onClick={() => {setActiveTab('overview'); setResults(null); setProgress(0);}}
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              >
+                🔄 Generate New
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}`;
+  }
+
+  private generateEnhancedProcessAutomationTemplate(title: string, description: string, capabilities: string, sampleData: any): string {
+    return `import React, { useState, useEffect } from 'react';
+
+export default function ${title.replace(/[^A-Za-z0-9]/g, '')}Demo() {
+  const [metrics, setMetrics] = useState(${JSON.stringify(sampleData.metrics)});
+  const [workflows] = useState(${JSON.stringify(sampleData.workflows)});
+  const [selectedWorkflow, setSelectedWorkflow] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics(prev => ({
+        ...prev,
+        items_processed: prev.items_processed + Math.floor(Math.random() * 3),
+        processing_time: (Math.random() * 0.2 + Number(prev.processing_time)).toFixed(1)
+      }));
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <h1 className="text-3xl font-bold text-gray-900">${title}</h1>
+          <p className="text-gray-600 mt-2">${description}</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Metrics Dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+            <h3 className="text-3xl font-bold text-blue-600">{metrics.items_processed}</h3>
+            <p className="text-gray-600 mt-1">Items Processed Today</p>
+            <div className="text-xs text-green-600 mt-2">+{Math.floor(Math.random() * 20 + 10)}% from yesterday</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+            <h3 className="text-3xl font-bold text-green-600">{metrics.accuracy}%</h3>
+            <p className="text-gray-600 mt-1">Accuracy Rate</p>
+            <div className="text-xs text-green-600 mt-2">Above target (90%)</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+            <h3 className="text-3xl font-bold text-purple-600">{metrics.processing_time}s</h3>
+            <p className="text-gray-600 mt-1">Avg Processing Time</p>
+            <div className="text-xs text-green-600 mt-2">-15% from last week</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+            <h3 className="text-3xl font-bold text-orange-600">{workflows.length}</h3>
+            <p className="text-gray-600 mt-1">Active Workflows</p>
+            <div className="text-xs text-blue-600 mt-2">All systems operational</div>
+          </div>
+        </div>
+
+        {/* Workflow Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Workflow List */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Active Workflows</h2>
+            <div className="space-y-4">
+              {workflows.map((workflow, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedWorkflow(index)}
+                  className={\`p-4 border rounded-lg cursor-pointer transition-all \${
+                    selectedWorkflow === index ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }\`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={\`w-3 h-3 rounded-full \${
+                        workflow.status === 'active' ? 'bg-green-500' :
+                        workflow.status === 'running' ? 'bg-yellow-500 animate-pulse' : 'bg-blue-500'
+                      }\`}></div>
+                      <span className="font-medium">{workflow.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">{workflow.processed}</div>
+                      <div className="text-xs text-gray-500">processed</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex justify-between text-sm">
+                    <span className="text-gray-600">Success Rate: {workflow.success_rate}%</span>
+                    <span className={\`px-2 py-1 rounded-full text-xs \${
+                      workflow.status === 'active' ? 'bg-green-100 text-green-800' :
+                      workflow.status === 'running' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+                    }\`}>
+                      {workflow.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Workflow Details */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Workflow Details</h2>
+            <div className="space-y-4">
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h3 className="font-semibold text-lg">{workflows[selectedWorkflow].name}</h3>
+                <p className="text-gray-600">Automated processing workflow with AI validation</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-sm text-gray-600">Items Processed</div>
+                  <div className="text-xl font-semibold">{workflows[selectedWorkflow].processed}</div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded">
+                  <div className="text-sm text-gray-600">Success Rate</div>
+                  <div className="text-xl font-semibold text-green-600">{workflows[selectedWorkflow].success_rate}%</div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Progress</span>
+                  <span>{workflows[selectedWorkflow].success_rate}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{width: \`\${workflows[selectedWorkflow].success_rate}%\`}}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-2 pt-4">
+                <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors">
+                  View Details
+                </button>
+                <button className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition-colors">
+                  Configure
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+          <div className="space-y-3">
+            {['Document processed successfully', 'Workflow automation completed', 'Quality check passed', 'Report generated'].map((activity, index) => (
+              <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>{activity}</span>
+                <span className="ml-auto text-sm text-gray-500">{Math.floor(Math.random() * 30 + 1)} min ago</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}`;
+  }
+
+  private generateEnhancedPersonalizationTemplate(title: string, description: string, capabilities: string, sampleData: any): string {
+    return `import React, { useState } from 'react';
+
+export default function ${title.replace(/[^A-Za-z0-9]/g, '')}Demo() {
+  const [selectedProfile, setSelectedProfile] = useState(0);
+  const [profiles] = useState(${JSON.stringify(sampleData.profiles)});
+  const [metrics] = useState(${JSON.stringify(sampleData.metrics)});
+
+  const currentProfile = profiles[selectedProfile];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100">
+      {/* Header */}
+      <div className="bg-white shadow-lg border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <h1 className="text-3xl font-bold text-gray-900">${title}</h1>
+          <p className="text-gray-600 mt-2">${description}</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Customer Profile Selector */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-semibold mb-6">Customer Profiles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {profiles.map((profile, index) => (
+              <div
+                key={index}
+                onClick={() => setSelectedProfile(index)}
+                className={\`p-6 border-2 rounded-xl cursor-pointer transition-all \${
+                  selectedProfile === index
+                    ? 'border-purple-500 bg-purple-50 shadow-lg'
+                    : 'border-gray-200 hover:border-purple-300 hover:shadow-md'
+                }\`}
+              >
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-bold text-xl">
+                    {profile.name.charAt(0)}
+                  </div>
+                  <h3 className="font-semibold text-lg">{profile.name}</h3>
+                  <p className="text-gray-600 mb-2">{profile.segment} Customer</p>
+                  <div className="flex justify-between text-sm">
+                    <span>Score: {profile.score}%</span>
+                    <span>{profile.recommendations} recs</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Personalization Dashboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Profile Details */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-6">Profile Analysis</h2>
+            <div className="space-y-6">
+              <div className="border-l-4 border-purple-500 pl-4">
+                <h3 className="font-semibold text-lg">{currentProfile.name}</h3>
+                <p className="text-gray-600">{currentProfile.segment} Customer Segment</p>
+              </div>
+
+              {/* Metrics */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-purple-600">{currentProfile.score}%</div>
+                  <div className="text-sm text-purple-800">Personalization Score</div>
+                </div>
+                <div className="bg-pink-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-pink-600">{currentProfile.recommendations}</div>
+                  <div className="text-sm text-pink-800">Active Recommendations</div>
+                </div>
+              </div>
+
+              {/* Progress Indicators */}
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Engagement Score</span>
+                    <span>{currentProfile.score}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
+                      style={{width: \`\${currentProfile.score}%\`}}
+                    ></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Satisfaction</span>
+                    <span>{Math.floor(Math.random() * 10) + 85}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-500 h-2 rounded-full"
+                      style={{width: \`\${Math.floor(Math.random() * 10) + 85}%\`}}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-6">AI Recommendations</h2>
+            <div className="space-y-4">
+              {Array.from({length: currentProfile.recommendations}, (_, i) => ({
+                title: [
+                  'Premium Investment Portfolio',
+                  'Personalized Savings Plan',
+                  'Risk-Adjusted Strategy',
+                  'Growth Opportunities',
+                  'Retirement Planning',
+                  'Tax Optimization',
+                  'Insurance Coverage',
+                  'Financial Advisory Session'
+                ][i % 8],
+                confidence: Math.floor(Math.random() * 15) + 85,
+                category: ['Investment', 'Savings', 'Planning'][Math.floor(Math.random() * 3)]
+              })).map((rec, index) => (
+                <div key={index} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-lg">{rec.title}</h4>
+                    <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                      {rec.confidence}% match
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    Personalized {rec.category.toLowerCase()} recommendation based on {currentProfile.name}'s profile and preferences.
+                  </p>
+                  <div className="mt-3 flex justify-between items-center">
+                    <span className="text-xs text-gray-500">{rec.category}</span>
+                    <button className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors">
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Metrics */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-6">Personalization Performance</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{metrics.accuracy}%</div>
+              <div className="text-gray-600">Recommendation Accuracy</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{metrics.items_processed}</div>
+              <div className="text-gray-600">Profiles Analyzed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">{metrics.processing_time}s</div>
+              <div className="text-gray-600">Avg Response Time</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-600">{metrics.confidence}%</div>
+              <div className="text-gray-600">AI Confidence</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Center */}
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+          <h2 className="text-xl font-semibold mb-4">Next Steps</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-3 rounded-lg transition-all">
+              📊 Generate Report
+            </button>
+            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-3 rounded-lg transition-all">
+              📧 Send Recommendations
+            </button>
+            <button className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-3 rounded-lg transition-all">
+              🔄 Refresh Analysis
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}`;
+  }
+
   private generatePersonalizationTemplate(title: string, capabilities: string): string {
     return `import React, { useState } from 'react';
 
@@ -902,5 +1625,19 @@ export default function DemoApp() {
       storage: storageStats,
       initialized: true
     };
+  }
+
+  /**
+   * Validate a specific demo's health and restart if needed
+   */
+  async validateDemoHealth(demoId: string) {
+    return await this.localDeployer.validateDemoHealth(demoId);
+  }
+
+  /**
+   * Validate all active demos and restart unhealthy ones
+   */
+  async validateAllDemos() {
+    return await this.localDeployer.validateAllDemos();
   }
 }

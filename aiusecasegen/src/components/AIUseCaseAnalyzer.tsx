@@ -71,7 +71,7 @@ const AIUseCaseAnalyzer = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [temperature, setTemperature] = useState<number[]>([0.7]); // Default temperature 0.7
-  const [demoGeneration, setDemoGeneration] = useState<Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>>({});
+  const [demoGeneration, setDemoGeneration] = useState<Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string; progress?: {percentage: number; currentStep: string};}>>({});
 
   // Use Next.js public env var if injected at build time, fallback to localhost
   // Avoid direct Node 'process' typing in case types not loaded in some lint context
@@ -80,7 +80,8 @@ const AIUseCaseAnalyzer = () => {
     : 'http://localhost:3001/api/v1';
 
   const triggerDemoGeneration = useCallback(async (useCase: UseCaseCapability) => {
-  setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'generating'}}));
+    setDemoGeneration(prev => ({...prev, [useCase.id]: {status: 'generating', progress: {percentage: 0, currentStep: 'Starting demo generation...'}}}));
+
     try {
       const payload = {
         useCaseTitle: useCase.title,
@@ -92,26 +93,128 @@ const AIUseCaseAnalyzer = () => {
         generationPreferences: { useV0: true, useAzureOpenAI: true, fallbackToBasic: true },
         aiEnhancementOptions: { enhanceDescription: true, generateSyntheticData: true, createUserJourney: true, suggestImprovements: true }
       };
+
+      // Start demo generation
       const res = await fetch(`${apiBase}/generate-demo-enhanced`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
       if(!res.ok){
         const err = await res.json().catch(()=>({error: res.statusText}));
         throw new Error(err.message || err.error || 'Demo generation failed');
       }
+
       const data = await res.json();
-      console.log('Demo generation response:', data);
-    // Use liveDemoUrl if available, otherwise v0.dev preview, otherwise fallback to local demo page
-    const liveDemoUrl = data.data?.demo?.liveDemoUrl;
-    const v0PreviewUrl = data.data?.demo?.v0Component?.preview;
-    const demoUrl = liveDemoUrl || v0PreviewUrl || `/demo-app/${data.data?.demoId}`;
-    console.log('liveDemoUrl:', liveDemoUrl, 'v0PreviewUrl:', v0PreviewUrl, 'demoUrl:', demoUrl);
-    setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'success', url: demoUrl}}));
-    } catch(e:any){
+      const demoId = data.data?.demoId;
+      console.log('Demo generation started:', data);
+
+      if (!demoId) {
+        throw new Error('No demo ID returned from server');
+      }
+
+      // Poll for status updates
+      const pollStatus = async () => {
+        try {
+          const statusRes = await fetch(`${apiBase}/demo-status/${demoId}`);
+          if (!statusRes.ok) {
+            console.error('Status poll failed:', statusRes.statusText);
+            return;
+          }
+
+          const statusData = await statusRes.json();
+          const { status, progress } = statusData.data;
+
+          setDemoGeneration(prev => ({
+            ...prev,
+            [useCase.id]: {
+              ...prev[useCase.id],
+              status: status === 'completed' ? 'success' : status === 'error' ? 'error' : 'generating',
+              progress: {
+                percentage: progress?.percentage || 0,
+                currentStep: progress?.currentStep || 'Processing...'
+              }
+            }
+          }));
+
+          // If completed, get final demo URL and stop polling
+          if (status === 'completed') {
+            // Fetch the latest demo URL dynamically
+            let demoUrl = 'http://localhost:4002'; // fallback
+
+            try {
+              const latestDemoResponse = await fetch(`${apiBase}/latest-demo`);
+              if (latestDemoResponse.ok) {
+                const latestData = await latestDemoResponse.json();
+                if (latestData.success && latestData.data.hasDemo && latestData.data.liveDemoUrl) {
+                  demoUrl = latestData.data.liveDemoUrl;
+                }
+              }
+            } catch (error) {
+              console.warn('Failed to fetch latest demo URL, using fallback:', error);
+            }
+
+            setDemoGeneration(prev => ({
+              ...prev,
+              [useCase.id]: {
+                status: 'success',
+                url: demoUrl,
+                progress: { percentage: 100, currentStep: 'Demo generation completed!' }
+              }
+            }));
+
+            clearInterval(pollInterval);
+          } else if (status === 'error') {
+            setDemoGeneration(prev => ({
+              ...prev,
+              [useCase.id]: {
+                status: 'error',
+                error: 'Demo generation failed',
+                progress: { percentage: 0, currentStep: 'Generation failed' }
+              }
+            }));
+            clearInterval(pollInterval);
+          }
+        } catch (err) {
+          console.error('Status polling error:', err);
+        }
+      };
+
+      // Start polling every 2 seconds
+      const pollInterval = setInterval(pollStatus, 2000);
+
+      // Initial status check
+      setTimeout(pollStatus, 1000);
+
+      // Stop polling after 5 minutes max
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setDemoGeneration(prev => {
+          if (prev[useCase.id]?.status === 'generating') {
+            return {
+              ...prev,
+              [useCase.id]: {
+                status: 'error',
+                error: 'Demo generation timed out',
+                progress: { percentage: 0, currentStep: 'Generation timed out' }
+              }
+            };
+          }
+          return prev;
+        });
+      }, 300000); // 5 minutes
+
+    } catch(e: any){
       console.error('Demo generation error:', e);
-  setDemoGeneration((prev: Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string;}>) => ({...prev, [useCase.id]: {status: 'error', error: e.message}}));
+      setDemoGeneration(prev => ({
+        ...prev,
+        [useCase.id]: {
+          status: 'error',
+          error: e.message,
+          progress: { percentage: 0, currentStep: 'Generation failed' }
+        }
+      }));
     }
   }, [apiBase]);
   
@@ -746,18 +849,29 @@ const AIUseCaseAnalyzer = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Plan
                               </Button>
-                              <div className="flex items-center space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60" 
-                                  disabled={demoGeneration[useCase.id]?.status==='generating'}
-                                  onClick={() => triggerDemoGeneration(useCase)}
-                                >
-                                  <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
-                                  {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
-                                </Button>
-                                {demoGeneration[useCase.id]?.status==='success' && (
-                                  <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">View Demo</a>
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60"
+                                    disabled={demoGeneration[useCase.id]?.status==='generating'}
+                                    onClick={() => triggerDemoGeneration(useCase)}
+                                  >
+                                    <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
+                                    {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
+                                  </Button>
+                                  {demoGeneration[useCase.id]?.status==='success' && (
+                                    <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">View Demo</a>
+                                  )}
+                                </div>
+                                {demoGeneration[useCase.id]?.status==='generating' && demoGeneration[useCase.id]?.progress && (
+                                  <div className="w-full">
+                                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                      <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
+                                      <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
+                                    </div>
+                                    <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -879,18 +993,29 @@ const AIUseCaseAnalyzer = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Plan
                               </Button>
-                              <div className="flex items-center space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60" 
-                                  disabled={demoGeneration[useCase.id]?.status==='generating'}
-                                  onClick={() => triggerDemoGeneration(useCase)}
-                                >
-                                  <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
-                                  {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
-                                </Button>
-                                {demoGeneration[useCase.id]?.status==='success' && (
-                                  <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-700 underline">View Demo</a>
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 disabled:opacity-60"
+                                    disabled={demoGeneration[useCase.id]?.status==='generating'}
+                                    onClick={() => triggerDemoGeneration(useCase)}
+                                  >
+                                    <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
+                                    {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
+                                  </Button>
+                                  {demoGeneration[useCase.id]?.status==='success' && (
+                                    <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-700 underline">View Demo</a>
+                                  )}
+                                </div>
+                                {demoGeneration[useCase.id]?.status==='generating' && demoGeneration[useCase.id]?.progress && (
+                                  <div className="w-full">
+                                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                      <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
+                                      <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
+                                    </div>
+                                    <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1012,18 +1137,29 @@ const AIUseCaseAnalyzer = () => {
                                 <Eye className="h-4 w-4 mr-1" />
                                 View Plan
                               </Button>
-                              <div className="flex items-center space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60" 
-                                  disabled={demoGeneration[useCase.id]?.status==='generating'}
-                                  onClick={() => triggerDemoGeneration(useCase)}
-                                >
-                                  <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
-                                  {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
-                                </Button>
-                                {demoGeneration[useCase.id]?.status==='success' && (
-                                  <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-purple-700 underline">View Demo</a>
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
+                                    disabled={demoGeneration[useCase.id]?.status==='generating'}
+                                    onClick={() => triggerDemoGeneration(useCase)}
+                                  >
+                                    <Sparkles className={`h-4 w-4 mr-1 ${demoGeneration[useCase.id]?.status==='generating' ? 'animate-spin':''}`} />
+                                    {demoGeneration[useCase.id]?.status==='generating' ? 'Generating...' : demoGeneration[useCase.id]?.status==='success' ? 'Regenerate' : 'Generate'}
+                                  </Button>
+                                  {demoGeneration[useCase.id]?.status==='success' && (
+                                    <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-purple-700 underline">View Demo</a>
+                                  )}
+                                </div>
+                                {demoGeneration[useCase.id]?.status==='generating' && demoGeneration[useCase.id]?.progress && (
+                                  <div className="w-full">
+                                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                      <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
+                                      <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
+                                    </div>
+                                    <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                  </div>
                                 )}
                               </div>
                             </div>

@@ -15,7 +15,20 @@
       "Bash(npm install:*)",
       "WebFetch(domain:github.com)",
       "Bash(npm run lint)",
-      "Bash(set PORT=3002)"
+      "Bash(set PORT=3002)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
+      "Bash(npm run scan-docs:*)",
+      "Bash(npm run extract-usecase:*)",
+      "Bash(npm run generate-demo-from-docs:*)",
+      "Bash(node:*)",
+      "Bash(pkill:*)",
+      "Bash(ENABLE_VERBOSE_LOGGING=true npm run dev)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(PORT=4002 npm start)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

@@ -4,7 +4,7 @@
   "description": "Professional demo generation API service using v0 SDK with comprehensive security and logging",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "nodemon",
     "dev:debug": "nodemon --watch src --ext ts --exec \"node --inspect=9229 -r ts-node/register src/index.ts\"",
     "build": "tsc",
     "start": "node dist/index.js",
