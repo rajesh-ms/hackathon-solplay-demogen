@@ -3,16 +3,14 @@ interface DemoData {
   demoId: string;
   status: string;
   demo?: {
-    v0Component?: { code?: string; componentId?: string };
-    aiEnhancedContent?: any;
-    metadata?: any;
+    v0Component?: { code?: string; componentId?: string; preview?: string };
+    aiEnhancedContent?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
   };
 }
 
 async function fetchDemo(demoId: string): Promise<DemoData | null> {
-  const base = (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_DEMOGEN_API_BASE)
-    ? (globalThis as any).process.env.NEXT_PUBLIC_DEMOGEN_API_BASE
-    : 'http://localhost:3001/api/v1';
+  const base = process.env.NEXT_PUBLIC_DEMOGEN_API_BASE || 'http://localhost:3001/api/v1';
   try {
     const res = await fetch(`${base}/demos/${demoId}`, { cache: 'no-store' });
     if(!res.ok) return null;
@@ -23,7 +21,7 @@ async function fetchDemo(demoId: string): Promise<DemoData | null> {
   }
 }
 
-function createRuntimeComponent(code: string): any {
+function createRuntimeComponent(code: string): React.JSX.Element {
   // Create a secure iframe with the React component
   const htmlContent = `
 <!DOCTYPE html>

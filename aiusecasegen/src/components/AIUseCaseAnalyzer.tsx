@@ -8,13 +8,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { 
-  Upload, 
-  FileText, 
-  Brain, 
-  Sparkles, 
-  CheckCircle, 
-  AlertCircle, 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Upload,
+  FileText,
+  Brain,
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
   Download,
   Eye,
   TrendingUp,
@@ -24,7 +25,10 @@ import {
   PieChart,
   Star,
   Clock,
-  Lightbulb
+  Lightbulb,
+  ChevronDown,
+  ChevronUp,
+  Terminal
 } from 'lucide-react';
 
 interface UseCaseCapability {
@@ -71,16 +75,15 @@ const AIUseCaseAnalyzer = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [temperature, setTemperature] = useState<number[]>([0.7]); // Default temperature 0.7
-  const [demoGeneration, setDemoGeneration] = useState<Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string; progress?: {percentage: number; currentStep: string};}>>({});
+  const [demoGeneration, setDemoGeneration] = useState<Record<string, {status: 'idle'|'generating'|'success'|'error'; url?: string; error?: string; progress?: {percentage: number; currentStep: string}; logs?: string[];}>>({});
+  const [logsOpen, setLogsOpen] = useState<Record<string, boolean>>({});
 
   // Use Next.js public env var if injected at build time, fallback to localhost
-  // Avoid direct Node 'process' typing in case types not loaded in some lint context
-  const apiBase = (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_DEMOGEN_API_BASE)
-    ? (globalThis as any).process.env.NEXT_PUBLIC_DEMOGEN_API_BASE
-    : 'http://localhost:3001/api/v1';
+  const apiBase = process.env.NEXT_PUBLIC_DEMOGEN_API_BASE || 'http://localhost:3001/api/v1';
 
   const triggerDemoGeneration = useCallback(async (useCase: UseCaseCapability) => {
-    setDemoGeneration(prev => ({...prev, [useCase.id]: {status: 'generating', progress: {percentage: 0, currentStep: 'Starting demo generation...'}}}));
+    setDemoGeneration(prev => ({...prev, [useCase.id]: {status: 'generating', progress: {percentage: 0, currentStep: 'Starting demo generation...'}, logs: ['[INFO] Demo generation initiated', '[INFO] Preparing payload...']}}));
+    setLogsOpen(prev => ({...prev, [useCase.id]: true})); // Auto-open logs when generation starts
 
     try {
       const payload = {
@@ -95,6 +98,14 @@ const AIUseCaseAnalyzer = () => {
       };
 
       // Start demo generation
+      setDemoGeneration(prev => ({
+        ...prev,
+        [useCase.id]: {
+          ...prev[useCase.id],
+          logs: [...(prev[useCase.id]?.logs || []), '[INFO] Sending request to demo generation API...']
+        }
+      }));
+
       const res = await fetch(`${apiBase}/generate-demo-enhanced`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,12 +114,27 @@ const AIUseCaseAnalyzer = () => {
 
       if(!res.ok){
         const err = await res.json().catch(()=>({error: res.statusText}));
+        setDemoGeneration(prev => ({
+          ...prev,
+          [useCase.id]: {
+            ...prev[useCase.id],
+            logs: [...(prev[useCase.id]?.logs || []), `[ERROR] API request failed: ${err.message || err.error}`]
+          }
+        }));
         throw new Error(err.message || err.error || 'Demo generation failed');
       }
 
       const data = await res.json();
       const demoId = data.data?.demoId;
       console.log('Demo generation started:', data);
+
+      setDemoGeneration(prev => ({
+        ...prev,
+        [useCase.id]: {
+          ...prev[useCase.id],
+          logs: [...(prev[useCase.id]?.logs || []), `[SUCCESS] Demo generation started with ID: ${demoId}`]
+        }
+      }));
 
       if (!demoId) {
         throw new Error('No demo ID returned from server');
@@ -120,6 +146,13 @@ const AIUseCaseAnalyzer = () => {
           const statusRes = await fetch(`${apiBase}/demo-status/${demoId}`);
           if (!statusRes.ok) {
             console.error('Status poll failed:', statusRes.statusText);
+            setDemoGeneration(prev => ({
+              ...prev,
+              [useCase.id]: {
+                ...prev[useCase.id],
+                logs: [...(prev[useCase.id]?.logs || []), `[WARNING] Status poll failed: ${statusRes.statusText}`]
+              }
+            }));
             return;
           }
 
@@ -134,7 +167,8 @@ const AIUseCaseAnalyzer = () => {
               progress: {
                 percentage: progress?.percentage || 0,
                 currentStep: progress?.currentStep || 'Processing...'
-              }
+              },
+              logs: [...(prev[useCase.id]?.logs || []), `[INFO] Progress: ${progress?.percentage || 0}% - ${progress?.currentStep || 'Processing...'}`]
             }
           }));
 
@@ -143,24 +177,48 @@ const AIUseCaseAnalyzer = () => {
             // Fetch the latest demo URL dynamically
             let demoUrl = 'http://localhost:4002'; // fallback
 
+            setDemoGeneration(prev => ({
+              ...prev,
+              [useCase.id]: {
+                ...prev[useCase.id],
+                logs: [...(prev[useCase.id]?.logs || []), '[SUCCESS] Demo generation completed! Fetching demo URL...']
+              }
+            }));
+
             try {
               const latestDemoResponse = await fetch(`${apiBase}/latest-demo`);
               if (latestDemoResponse.ok) {
                 const latestData = await latestDemoResponse.json();
                 if (latestData.success && latestData.data.hasDemo && latestData.data.liveDemoUrl) {
                   demoUrl = latestData.data.liveDemoUrl;
+                  setDemoGeneration(prev => ({
+                    ...prev,
+                    [useCase.id]: {
+                      ...prev[useCase.id],
+                      logs: [...(prev[useCase.id]?.logs || []), `[INFO] Demo URL retrieved: ${demoUrl}`]
+                    }
+                  }));
                 }
               }
             } catch (error) {
               console.warn('Failed to fetch latest demo URL, using fallback:', error);
+              setDemoGeneration(prev => ({
+                ...prev,
+                [useCase.id]: {
+                  ...prev[useCase.id],
+                  logs: [...(prev[useCase.id]?.logs || []), `[WARNING] Failed to fetch demo URL, using fallback: ${demoUrl}`]
+                }
+              }));
             }
 
             setDemoGeneration(prev => ({
               ...prev,
               [useCase.id]: {
+                ...prev[useCase.id],
                 status: 'success',
                 url: demoUrl,
-                progress: { percentage: 100, currentStep: 'Demo generation completed!' }
+                progress: { percentage: 100, currentStep: 'Demo generation completed!' },
+                logs: [...(prev[useCase.id]?.logs || []), '[COMPLETE] Demo is ready to view!']
               }
             }));
 
@@ -169,9 +227,11 @@ const AIUseCaseAnalyzer = () => {
             setDemoGeneration(prev => ({
               ...prev,
               [useCase.id]: {
+                ...prev[useCase.id],
                 status: 'error',
                 error: 'Demo generation failed',
-                progress: { percentage: 0, currentStep: 'Generation failed' }
+                progress: { percentage: 0, currentStep: 'Generation failed' },
+                logs: [...(prev[useCase.id]?.logs || []), '[ERROR] Demo generation failed']
               }
             }));
             clearInterval(pollInterval);
@@ -205,13 +265,14 @@ const AIUseCaseAnalyzer = () => {
         });
       }, 300000); // 5 minutes
 
-    } catch(e: any){
-      console.error('Demo generation error:', e);
+    } catch(e){
+      const error = e as Error;
+      console.error('Demo generation error:', error);
       setDemoGeneration(prev => ({
         ...prev,
         [useCase.id]: {
           status: 'error',
-          error: e.message,
+          error: error.message,
           progress: { percentage: 0, currentStep: 'Generation failed' }
         }
       }));
@@ -864,13 +925,48 @@ const AIUseCaseAnalyzer = () => {
                                     <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">View Demo</a>
                                   )}
                                 </div>
-                                {demoGeneration[useCase.id]?.status==='generating' && demoGeneration[useCase.id]?.progress && (
-                                  <div className="w-full">
-                                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                      <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
-                                      <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
-                                    </div>
-                                    <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                {(demoGeneration[useCase.id]?.status==='generating' || demoGeneration[useCase.id]?.status==='success' || demoGeneration[useCase.id]?.status==='error') && demoGeneration[useCase.id]?.logs && (
+                                  <div className="w-full space-y-2">
+                                    {demoGeneration[useCase.id]?.progress && (
+                                      <>
+                                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                          <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
+                                          <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
+                                        </div>
+                                        <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                      </>
+                                    )}
+
+                                    <Collapsible
+                                      open={logsOpen[useCase.id]}
+                                      onOpenChange={(open) => setLogsOpen(prev => ({...prev, [useCase.id]: open}))}
+                                      className="w-full"
+                                    >
+                                      <CollapsibleTrigger className="flex items-center justify-between w-full text-xs text-gray-700 hover:text-gray-900 py-2 px-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
+                                        <span className="flex items-center gap-1">
+                                          <Terminal className="h-3 w-3" />
+                                          Generation Logs ({demoGeneration[useCase.id]?.logs?.length || 0})
+                                        </span>
+                                        {logsOpen[useCase.id] ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent className="mt-2">
+                                        <div className="bg-gray-900 text-gray-100 rounded-md p-3 max-h-48 overflow-y-auto font-mono text-xs space-y-1">
+                                          {demoGeneration[useCase.id]?.logs?.map((log, idx) => (
+                                            <div
+                                              key={idx}
+                                              className={`${
+                                                log.includes('[ERROR]') ? 'text-red-400' :
+                                                log.includes('[WARNING]') ? 'text-yellow-400' :
+                                                log.includes('[SUCCESS]') || log.includes('[COMPLETE]') ? 'text-green-400' :
+                                                'text-gray-300'
+                                              }`}
+                                            >
+                                              {log}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </CollapsibleContent>
+                                    </Collapsible>
                                   </div>
                                 )}
                               </div>
@@ -1008,13 +1104,48 @@ const AIUseCaseAnalyzer = () => {
                                     <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-700 underline">View Demo</a>
                                   )}
                                 </div>
-                                {demoGeneration[useCase.id]?.status==='generating' && demoGeneration[useCase.id]?.progress && (
-                                  <div className="w-full">
-                                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                      <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
-                                      <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
-                                    </div>
-                                    <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                {(demoGeneration[useCase.id]?.status==='generating' || demoGeneration[useCase.id]?.status==='success' || demoGeneration[useCase.id]?.status==='error') && demoGeneration[useCase.id]?.logs && (
+                                  <div className="w-full space-y-2">
+                                    {demoGeneration[useCase.id]?.progress && (
+                                      <>
+                                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                          <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
+                                          <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
+                                        </div>
+                                        <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                      </>
+                                    )}
+
+                                    <Collapsible
+                                      open={logsOpen[useCase.id]}
+                                      onOpenChange={(open) => setLogsOpen(prev => ({...prev, [useCase.id]: open}))}
+                                      className="w-full"
+                                    >
+                                      <CollapsibleTrigger className="flex items-center justify-between w-full text-xs text-gray-700 hover:text-gray-900 py-2 px-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
+                                        <span className="flex items-center gap-1">
+                                          <Terminal className="h-3 w-3" />
+                                          Generation Logs ({demoGeneration[useCase.id]?.logs?.length || 0})
+                                        </span>
+                                        {logsOpen[useCase.id] ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent className="mt-2">
+                                        <div className="bg-gray-900 text-gray-100 rounded-md p-3 max-h-48 overflow-y-auto font-mono text-xs space-y-1">
+                                          {demoGeneration[useCase.id]?.logs?.map((log, idx) => (
+                                            <div
+                                              key={idx}
+                                              className={`${
+                                                log.includes('[ERROR]') ? 'text-red-400' :
+                                                log.includes('[WARNING]') ? 'text-yellow-400' :
+                                                log.includes('[SUCCESS]') || log.includes('[COMPLETE]') ? 'text-green-400' :
+                                                'text-gray-300'
+                                              }`}
+                                            >
+                                              {log}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </CollapsibleContent>
+                                    </Collapsible>
                                   </div>
                                 )}
                               </div>
@@ -1152,13 +1283,48 @@ const AIUseCaseAnalyzer = () => {
                                     <a href={demoGeneration[useCase.id]?.url} target="_blank" rel="noopener noreferrer" className="text-xs text-purple-700 underline">View Demo</a>
                                   )}
                                 </div>
-                                {demoGeneration[useCase.id]?.status==='generating' && demoGeneration[useCase.id]?.progress && (
-                                  <div className="w-full">
-                                    <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                                      <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
-                                      <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
-                                    </div>
-                                    <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                {(demoGeneration[useCase.id]?.status==='generating' || demoGeneration[useCase.id]?.status==='success' || demoGeneration[useCase.id]?.status==='error') && demoGeneration[useCase.id]?.logs && (
+                                  <div className="w-full space-y-2">
+                                    {demoGeneration[useCase.id]?.progress && (
+                                      <>
+                                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                          <span>{demoGeneration[useCase.id]?.progress?.currentStep}</span>
+                                          <span>{demoGeneration[useCase.id]?.progress?.percentage}%</span>
+                                        </div>
+                                        <Progress value={demoGeneration[useCase.id]?.progress?.percentage || 0} className="h-2" />
+                                      </>
+                                    )}
+
+                                    <Collapsible
+                                      open={logsOpen[useCase.id]}
+                                      onOpenChange={(open) => setLogsOpen(prev => ({...prev, [useCase.id]: open}))}
+                                      className="w-full"
+                                    >
+                                      <CollapsibleTrigger className="flex items-center justify-between w-full text-xs text-gray-700 hover:text-gray-900 py-2 px-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
+                                        <span className="flex items-center gap-1">
+                                          <Terminal className="h-3 w-3" />
+                                          Generation Logs ({demoGeneration[useCase.id]?.logs?.length || 0})
+                                        </span>
+                                        {logsOpen[useCase.id] ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent className="mt-2">
+                                        <div className="bg-gray-900 text-gray-100 rounded-md p-3 max-h-48 overflow-y-auto font-mono text-xs space-y-1">
+                                          {demoGeneration[useCase.id]?.logs?.map((log, idx) => (
+                                            <div
+                                              key={idx}
+                                              className={`${
+                                                log.includes('[ERROR]') ? 'text-red-400' :
+                                                log.includes('[WARNING]') ? 'text-yellow-400' :
+                                                log.includes('[SUCCESS]') || log.includes('[COMPLETE]') ? 'text-green-400' :
+                                                'text-gray-300'
+                                              }`}
+                                            >
+                                              {log}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </CollapsibleContent>
+                                    </Collapsible>
                                   </div>
                                 )}
                               </div>
@@ -1183,7 +1349,6 @@ export default AIUseCaseAnalyzer;
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX { // Providing a minimal fallback prevents false-positive intrinsic element errors in tooling
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    interface IntrinsicElements { [elemName: string]: any }
+    interface IntrinsicElements { [elemName: string]: Record<string, unknown> }
   }
 }

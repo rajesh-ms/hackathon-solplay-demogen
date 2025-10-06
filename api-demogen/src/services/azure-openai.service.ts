@@ -317,7 +317,7 @@ Focus on realistic Financial Services scenarios with quantifiable business benef
 
   private createSyntheticDataPrompt(context: DemoContext): string {
     return `
-Generate realistic synthetic data for a Financial Services demo:
+Generate comprehensive, realistic synthetic data for a Financial Services demo:
 
 **Context:**
 - Category: ${context.category}
@@ -330,41 +330,163 @@ Generate realistic synthetic data for a Financial Services demo:
   "users": [
     {
       "id": "user_001",
-      "name": "Professional name",
-      "role": "Job title",
-      "department": "Department",
-      "experience": "Years of experience",
-      "preferences": {}
+      "name": "Sarah Chen",
+      "role": "Senior Financial Analyst",
+      "department": "Investment Banking",
+      "experience": "8 years",
+      "preferences": {
+        "riskTolerance": "moderate-aggressive",
+        "communicationChannel": "email",
+        "dashboardLayout": "advanced"
+      },
+      "performance": {
+        "tasksCompleted": 1247,
+        "accuracy": "97.3%",
+        "avgResponseTime": "2.1 hours"
+      }
     }
   ],
   "transactions": [
     {
-      "id": "txn_001",
-      "type": "Transaction type",
-      "amount": 1000.00,
+      "id": "txn_2024_087631",
+      "type": "Securities Trade",
+      "amount": 2456789.50,
       "currency": "USD",
-      "timestamp": "ISO date",
+      "timestamp": "2025-01-15T10:32:18Z",
       "status": "completed",
-      "metadata": {}
+      "counterparty": "Goldman Sachs",
+      "security": "AAPL - Apple Inc.",
+      "quantity": 15000,
+      "pricePerShare": 163.79,
+      "riskScore": 0.23,
+      "complianceChecks": ["AML: Passed", "KYC: Verified", "Sanctions: Clear"],
+      "metadata": {
+        "trader": "John Martinez",
+        "desk": "Equity Trading",
+        "clientAccount": "ACC-847293",
+        "commission": 2456.79
+      }
+    }
+  ],
+  "portfolios": [
+    {
+      "accountId": "PORT-2024-4521",
+      "customerName": "Michael Johnson",
+      "totalValue": 2456789.00,
+      "allocation": {
+        "stocks": 65,
+        "bonds": 25,
+        "cash": 5,
+        "alternatives": 5
+      },
+      "performance": {
+        "ytdReturn": 12.3,
+        "oneYearReturn": 18.7,
+        "fiveYearReturn": 9.2,
+        "benchmarkComparison": "+2.2% vs S&P 500"
+      },
+      "holdings": [
+        {
+          "symbol": "AAPL",
+          "name": "Apple Inc.",
+          "shares": 1500,
+          "currentPrice": 173.50,
+          "totalValue": 260250,
+          "percentOfPortfolio": 10.6,
+          "gainLoss": "+$35,420",
+          "gainLossPercent": 15.7
+        }
+      ]
     }
   ],
   "metrics": [
     {
-      "name": "Performance metric",
-      "current": "Current value",
-      "target": "Target value",
-      "trend": "up | down | stable"
+      "name": "Processing Speed",
+      "current": "2.3 minutes",
+      "target": "5.0 minutes",
+      "improvement": "54% faster",
+      "trend": "up",
+      "historicalData": [3.2, 2.9, 2.5, 2.3]
+    },
+    {
+      "name": "Cost Savings",
+      "current": "$2.8M annually",
+      "target": "$2.0M annually",
+      "improvement": "40% above target",
+      "trend": "up",
+      "breakdown": {
+        "laborCosts": "$1.6M",
+        "operationalEfficiency": "$800K",
+        "errorReduction": "$400K"
+      }
+    },
+    {
+      "name": "Accuracy Rate",
+      "current": "97.3%",
+      "target": "95.0%",
+      "improvement": "+2.3 percentage points",
+      "trend": "stable",
+      "errorTypes": {
+        "dataEntry": "1.2%",
+        "calculation": "0.8%",
+        "validation": "0.7%"
+      }
     }
   ],
   "performance": {
-    "responseTime": "2.3s",
-    "throughput": "1,247 requests/hour",
-    "accuracy": "94.7%",
-    "availability": "99.9%"
-  }
+    "responseTime": "2.3s avg (p50: 1.8s, p95: 4.2s, p99: 7.1s)",
+    "throughput": "1,247 requests/hour (peak: 2,100/hour)",
+    "accuracy": "97.3% (improved from 89.2% baseline)",
+    "availability": "99.94% uptime (SLA: 99.5%)",
+    "errorRate": "0.06% (target: <0.1%)",
+    "customerSatisfaction": "4.7/5.0 (Net Promoter Score: +68)"
+  },
+  "workflows": [
+    {
+      "id": "WF-2024-09831",
+      "name": "KYC Document Verification",
+      "status": "In Progress",
+      "priority": "High",
+      "assignedTo": "Sarah Chen",
+      "customer": "Acme Financial Corp",
+      "accountNumber": "ACC-847293",
+      "startTime": "2025-01-15T09:15:00Z",
+      "estimatedCompletion": "2025-01-15T11:30:00Z",
+      "progress": 65,
+      "checksPassed": 12,
+      "checksFailed": 0,
+      "checksPending": 6,
+      "riskLevel": "Low",
+      "complianceFlags": []
+    }
+  ],
+  "alerts": [
+    {
+      "id": "ALERT-2024-1523",
+      "severity": "Medium",
+      "type": "Compliance",
+      "message": "Transaction pattern anomaly detected for Account ACC-738291",
+      "timestamp": "2025-01-15T10:42:00Z",
+      "status": "Under Review",
+      "assignedTo": "Compliance Team",
+      "affectedAccounts": ["ACC-738291"],
+      "recommendedAction": "Review transaction history for past 30 days"
+    }
+  ],
+  "insights": [
+    {
+      "category": "Cost Optimization",
+      "title": "Automate repetitive data entry tasks",
+      "description": "45% of analyst time spent on manual data entry could be automated, saving $1.2M annually",
+      "impact": "High",
+      "effort": "Medium",
+      "roi": "340%",
+      "timeToValue": "3-4 months"
+    }
+  ]
 }
 
-Create realistic, professional data that demonstrates clear business value.`;
+Create rich, professional data with specific financial details, realistic metrics, and clear business value demonstration. Include at least 3-5 items in each array.`;
   }
 
   private createBusinessNarrativePrompt(useCase: UseCaseData): string {

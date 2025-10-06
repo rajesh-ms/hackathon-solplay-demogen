@@ -297,14 +297,21 @@ Design Requirements:
 - Interactive elements with hover states
 
 IMPORTANT - Include comprehensive synthetic data and pre-filled examples:
-- Pre-populated sample documents/text in input fields (earnings reports, analyst notes, market data)
-- Mock processing times (2-5 seconds) with realistic progress indicators
-- Confidence scores (85-98%) with detailed breakdown
-- Generated sample insights, summaries, and analytics
+- Pre-populated sample documents/text in input fields (earnings reports, analyst notes, market data, 10-K filings)
+- Mock processing times (2-5 seconds) with realistic progress indicators showing: "Parsing document...", "Analyzing sentiment...", "Generating insights..."
+- Confidence scores (85-98%) with detailed breakdown by category
+- Generated sample insights with具体financial metrics ($2.3M cost savings, 45% efficiency gain)
 - Pre-loaded demonstration data - NO actual file uploads needed
-- Sample financial documents content already displayed in the interface
+- Sample financial documents content already displayed in the interface (e.g., "Q4 2024 Earnings Report: Revenue increased 23% YoY to $156M...")
+- Rich data tables with 10-20 rows of realistic financial data (transactions, holdings, performance metrics)
+- Interactive charts with live data (line charts, bar charts, pie charts showing portfolio allocation, performance trends)
+- Realistic dollar amounts ($25K - $5M range), percentages (5% - 95%), and dates (current year)
+- Sample customer/client names, account numbers, transaction IDs
+- Multi-level data: summary cards with KPIs, detailed tables, drill-down views
+- Simulated real-time updates (counters incrementing, status changes, notifications appearing)
+- Before/after comparisons showing AI impact with specific metrics
 
-Make it a fully functional demo with realistic synthetic data that showcases the AI capabilities without requiring any file uploads.`;
+Create a production-ready demo that feels like a real financial services application with enterprise-grade data visualization and meaningful business insights.`;
   }
 
   private getProcessAutomationPrompt(useCase: UseCaseData): string {
@@ -328,15 +335,22 @@ Design Requirements:
 - Professional Financial Services styling
 
 IMPORTANT - Include comprehensive pre-loaded synthetic data:
-- Processing volumes (1000+ items/day) with live-updating counters
-- Accuracy rates (94-99%) with trend charts
-- Time savings (60-80% reduction) with before/after comparisons
-- Cost optimization (30-50% savings) with financial impact metrics
-- Sample workflow tasks, alerts, and audit trail entries
-- Realistic transaction names, amounts, and processing statuses
-- NO file uploads or external data required - everything pre-populated
+- Processing volumes (1,000+ items/day, 25,000/month) with live-updating counters and sparkline trend charts
+- Accuracy rates (94-99%) with multi-month trend charts showing continuous improvement
+- Time savings (60-80% reduction) with before/after comparisons: "Manual: 4.5 hours → AI: 45 minutes"
+- Cost optimization (30-50% savings) with financial impact metrics: "$2.8M annual savings, ROI: 340%"
+- Sample workflow tasks with realistic details: "Process KYC verification for Account #AC-2024-7831 - Status: In Review - Priority: High"
+- Real-time alerts and notifications: "12 new compliance alerts", "3 workflows completed", "SLA violation detected"
+- Audit trail entries with timestamps, user actions, and system responses
+- Realistic transaction data: amounts ($125.50 - $2.5M), merchant names, categories, risk scores
+- Workflow status distribution: 65% completed, 25% in-progress, 10% pending
+- Performance metrics dashboard: throughput (247 items/hour), average processing time (2.3 min), success rate (97.2%)
+- Exception handling examples: flagged items, manual review queue, escalation workflows
+- Compliance metrics: regulatory checks passed, risk assessment scores, approval chains
+- Team productivity metrics: tasks per analyst, time saved per process, workload distribution
+- NO file uploads or external data required - everything pre-populated with rich, realistic data
 
-Make it demonstrate clear business value with compelling pre-loaded metrics and fully functional demo interface.`;
+Create an enterprise-grade automation dashboard that demonstrates massive operational improvements and clear ROI with compelling, data-driven visuals.`;
   }
 
   private getPersonalizationPrompt(useCase: UseCaseData): string {
@@ -360,12 +374,17 @@ Design Requirements:
 - Interactive elements for exploring options
 
 IMPORTANT - Include comprehensive pre-loaded synthetic customer data:
-- Sample customer profiles (age 35, income $85K, retirement goals, etc.)
-- Personalized recommendations with AI reasoning explanations
-- Goal tracking with progress visualization (40% to retirement goal, etc.)
-- Risk assessment results and investment portfolio suggestions
-- Spending patterns, savings opportunities, and financial insights
-- Transaction history and behavioral analytics
+- Sample customer profiles with rich details: "Sarah Chen, Age 38, Income: $125K, Risk Tolerance: Moderate-Aggressive, Goals: Retirement at 60 ($2.5M target), Children's Education ($180K needed by 2030)"
+- Personalized recommendations with AI reasoning: "Based on your spending patterns and income growth, we recommend increasing 401(k) contributions to 15% (currently 8%) to reach retirement goals 3 years earlier"
+- Goal tracking with detailed progress: "Retirement: $485K of $2.5M (19% complete, on track for age 62 with current trajectory)", "Emergency Fund: $32K of $50K (64% complete, excellent progress)"
+- Risk assessment with portfolio allocation: "Current: 70% stocks, 25% bonds, 5% cash → Recommended: 75% stocks, 20% bonds, 5% alternative investments for better diversification"
+- Investment performance metrics: "YTD Return: +12.3% (S&P 500: +10.1%), 5-year annualized: +8.7%"
+- Spending patterns with actionable insights: "Dining: $850/month (+23% vs last year) - Opportunity to save $200/month by reducing to 2 restaurant visits/week"
+- Savings opportunities: "Switch to high-yield savings: +$1,200/year additional interest", "Refinance mortgage: Save $15K over 5 years"
+- Transaction history with categorization: 15-20 recent transactions with merchants, amounts, categories, and AI-generated tags
+- Behavioral analytics: "You typically overspend by 15% in December - consider setting aside $500 extra for holiday season"
+- Life event planning: "Upcoming: Home purchase in 2-3 years - recommended savings: $3,500/month for 20% down payment ($120K total)"
+- Tax optimization suggestions: "Maximize Roth IRA contribution ($6,500 remaining this year) to reduce taxable income by $8,200"
 - NO user input or file uploads required - everything pre-populated with realistic demo data
 
 Create an engaging, personalized financial experience that demonstrates AI-driven insights using comprehensive synthetic customer data.`;
